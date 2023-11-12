@@ -11,7 +11,7 @@ import scipy.sparse as _sp
 import numpy as _np
 
 
-class expm_multiply_parallel(object):
+class ExpmMultiplyParallel(object):
     """Implements `scipy.sparse.linalg.expm_multiply()` for *openmp*.
 
     Notes
