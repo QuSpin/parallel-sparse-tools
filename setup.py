@@ -8,6 +8,38 @@ import subprocess
 import numpy as np
 
 
+def extra_compile_args() -> List[str]:
+    if sys.platform in ["win32", "cygwin", "win64"]:
+        extra_compile_args = ["/openmp"]
+    if sys.platform in ["darwin"]:
+        extra_compile_args = [
+            "-DLLVM_ENABLE_PROJECTS",
+            "-Xpreprocessor",
+            "-fopenmp-version=50"
+            "-fopenmp",
+        ]
+    else:
+        extra_compile_args = ["-fopenmp"]
+
+    return extra_compile_args
+
+
+def extra_link_args() -> List[str]:
+    if sys.platform in ["win32", "cygwin", "win64"]:
+        extra_link_args = ["/openmp"]
+    if sys.platform in ["darwin"]:
+        extra_link_args = [
+            "-DLLVM_ENABLE_PROJECTS",
+            "-Xpreprocessor",
+            "-fopenmp-version=50"
+            "-fopenmp",
+        ]
+    else:
+        extra_link_args = ["-fopenmp"]
+
+    return extra_link_args
+
+
 def matvec_extension() -> List[Extension]:
     package_path = ("parallel_sparse_tools", "matvec")
     package_dir = os.path.join("src", *package_path)
@@ -41,7 +73,7 @@ def expm_multiply_parallel_core_extension() -> List[Extension]:
     return generate_extensions(package_path, includes)
 
 
-def generate_extensions(package_path, includes=[], extra_compile_args=[]):
+def generate_extensions(package_path, includes=[]):
     package_dir = os.path.join("src", *package_path)
     cython_src = glob.glob(os.path.join(package_dir, "*.pyx"))
 
@@ -56,7 +88,8 @@ def generate_extensions(package_path, includes=[], extra_compile_args=[]):
                 module_path,
                 [cython_file],
                 include_dirs=includes,
-                extra_compile_args=extra_compile_args,
+                extra_compile_args=extra_compile_args(),
+                extra_link_args=extra_link_args(),
             )
         )
 
