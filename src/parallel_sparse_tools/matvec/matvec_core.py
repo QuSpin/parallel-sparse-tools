@@ -1,5 +1,3 @@
-import os
-
 from ._oputils import _matvec
 from ._oputils import _get_matvec_function
 
@@ -94,4 +92,4 @@ def matvec(array, other, overwrite_out=False, out=None, a=1.0):
 
     """
 
-    return _matvec(array, other, overwrite_out=False, out=None, a=1.0)
+    return _matvec(array, other, overwrite_out=overwrite_out, out=out, a=a)
