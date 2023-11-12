@@ -2,7 +2,12 @@
 #define _OPENMP_H
 
 #if defined(_OPENMP)
+
+#if __APPLE__
+#include "osx_omp.h"
+#else
 #include <omp.h>
+#endif 
 
 #include <complex>
 #include "complex_ops.h"

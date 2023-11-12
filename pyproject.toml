@@ -72,4 +72,4 @@ archs = ["universal2"]
 repair-wheel-command = "delocate-wheel --require-archs {delocate_archs} -w {dest_dir} -v {wheel}"
 
 [tool.cibuildwheel.windows]
-archs = ["x86_64"]
+archs = ["AMD64"]
