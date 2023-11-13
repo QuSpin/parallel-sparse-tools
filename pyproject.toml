@@ -25,7 +25,6 @@ dependencies = [
 
 
 [tool.cibuildwheel]
-build = "cp*-*"
 skip = ""
 test-skip = ""
 
