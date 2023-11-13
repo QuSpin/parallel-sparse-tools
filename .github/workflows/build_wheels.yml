@@ -4,11 +4,13 @@ on: [push, pull_request]
 
 jobs:
   build_wheels:
-    name: Build wheels on ${{ matrix.os }}
+    name: Build wheels on ${{ matrix.os }} for CPython ${{ matrix.python }}
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
         os: [ubuntu-20.04, windows-2019, macos-11]
+        python: [cp39, cp310, cp311, cp312]
+        
 
     steps:
       - uses: actions/checkout@v4
@@ -19,8 +21,11 @@ jobs:
         with:
           platforms: all
 
+
       - name: Build wheels
         uses: pypa/cibuildwheel@v2.16.2
+        env:
+          CIBW_BUILD: ${{ matrix.python }}
     #   - uses: actions/upload-artifact@v3
     #     with:
     #       path: ./wheelhouse/*.whl
