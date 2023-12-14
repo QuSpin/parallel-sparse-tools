@@ -30,8 +30,7 @@ dependencies = [
 
 [tool.cibuildwheel]
 skip = ""
-test-requires = "pytest"
-test-command = "pytest {project}/tests"
+
 
 build-frontend = "default"
 config-settings = {}
@@ -44,9 +43,9 @@ before-all = ""
 before-build = ""
 repair-wheel-command = ""
 
-test-command = ""
 before-test = ""
-test-requires = []
+test-command = "pytest -vv {project}/tests"
+test-requires = ["pytest"]
 test-extras = []
 
 container-engine = "docker"
