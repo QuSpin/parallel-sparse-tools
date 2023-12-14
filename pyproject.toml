@@ -31,7 +31,6 @@ dependencies = [
 [tool.cibuildwheel]
 skip = ""
 
-
 build-frontend = "default"
 config-settings = {}
 dependency-versions = "pinned"
