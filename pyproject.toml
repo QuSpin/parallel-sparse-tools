@@ -30,7 +30,8 @@ dependencies = [
 
 [tool.cibuildwheel]
 skip = ""
-test-skip = ""
+test-requires = "pytest"
+test-command = "pytest {project}/tests"
 
 build-frontend = "default"
 config-settings = {}
