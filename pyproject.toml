@@ -67,7 +67,7 @@ musllinux-s390x-image = "musllinux_1_1"
 
 
 [tool.cibuildwheel.linux]
-archs = ["x86_64", "aarch64"]
+archs = ["x86_64"]
 repair-wheel-command = "auditwheel repair -w {dest_dir} {wheel}"
 
 [tool.cibuildwheel.macos]
