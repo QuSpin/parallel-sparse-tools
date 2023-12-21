@@ -47,7 +47,41 @@ def test_errors():
         
     with pytest.raises(ValueError):
         U.set_a(0.1, dtype=np.int8)
+
+    v = np.random.rand(9, 2, 2)
+    
+    with pytest.raises(ValueError):
+        U.dot(v)
         
+    v = np.random.rand(9)
+    
+    with pytest.raises(ValueError):
+        U.dot(v)
+        
+    v_c = np.random.rand(10)
+    
+    U = ExpmMultiplyParallel(A, a=-0.1j)
+    
+    with pytest.raises(ValueError):
+        U.dot(v_c, overwrite_v=True)
+        
+    v_c = np.random.rand(20).astype(np.complex128)[::2]
+
+    with pytest.raises(TypeError):
+        U.dot(v_c, overwrite_v=True)
+        
+    v_c = np.random.rand(10).astype(np.complex128)
+    work = np.zeros(2*v_c.size+1, dtype=np.complex128)
+    
+    with pytest.raises(ValueError):
+        U.dot(v_c, work_array=work)
+    
+    work = np.zeros(2*v_c.size, dtype=np.float64)
+    
+    with pytest.raises(ValueError):
+        U.dot(v_c, work_array=work)
+
+
         
 def test_methods():
     a = 0.1
@@ -155,7 +189,7 @@ def test_batch():
     np.allclose(U.dot(v), expected_u)
     
     
-    t = 0.1
+    t = 10.0
     A = random(100, 100, density=0.1, format="csr") >= 0.5
     A = A.astype(np.int8)
     
