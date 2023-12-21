@@ -140,7 +140,7 @@ class ExpmMultiplyParallel(object):
             if dtype is None:
                 self._dtype = _np.result_type(self._A.dtype, a_dtype_min, _np.float64)
             else:
-                min_dtype = _np.result_type(A.dtype, a_dtype_min, _np.float32)
+                min_dtype = _np.result_type(self.A.dtype, a_dtype_min, _np.float32)
                 if not _np.can_cast(min_dtype, dtype):
                     raise ValueError(
                         "dtype not sufficient to represent a*A to at least float32 precision."
