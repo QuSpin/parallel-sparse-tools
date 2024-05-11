@@ -1,3 +1,4 @@
+import itertools
 import numpy as np
 from numpy import int8, int16, int32, int64, float32, float64, complex64, complex128
 import os
@@ -30,6 +31,10 @@ I_types = [int32, int64]
 T_types = [complex128, float64, complex64, float32]
 F_types = [complex128, float64, complex64, float32]
 
+# dtype1: indices dtype
+# dtype2: matrix dtype
+# dtype3: scalar dtype
+# dtype4: vector dtype
 
 get_switch_body = """
 #include <iostream>
@@ -43,6 +48,16 @@ int get_switch_num(PyArray_Descr * dtype1,PyArray_Descr * dtype2,PyArray_Descr *
 	{}
 	return -1;
 }}"""
+
+# Vectors are the same type for input and output
+# This is to reduce the number of combinations
+# We can always cast the input to the appropriate
+# type for the output with no loss of precision
+# and with little overhead.
+
+
+            
+
 
 
 def generate_get_switch():

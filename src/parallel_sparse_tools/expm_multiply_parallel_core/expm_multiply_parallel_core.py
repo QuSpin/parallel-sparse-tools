@@ -5,7 +5,7 @@ from .expm_multiply_parallel_wrapper import (
     _wrapper_csr_trace,
     _wrapper_csr_1_norm,
 )
-from scipy.sparse.construct import eye
+from scipy.sparse import eye
 from scipy.sparse.linalg._expm_multiply import _fragment_3_1, _exact_1_norm
 import scipy.sparse as _sp
 import numpy as _np
