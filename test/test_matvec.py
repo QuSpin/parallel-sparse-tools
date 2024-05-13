@@ -90,9 +90,9 @@ def test_matvecs_C(N, dtype_A, dtype_a, dtype_v, format):
     A = get_A(N, dtype_A, format)
     dtype_a = np.result_type(dtype_A, dtype_a)
     a = np.asarray(-0.1, dtype=dtype_a)
-    V = np.random.rand(N, 10).astype(dtype_v)
+    V = np.random.rand(2*N, 10).astype(dtype_v)
     V = np.asfortranarray(V)
-    vv = V[:, 1::2]
+    vv = V[::2, 1::2]
 
     tol = get_tolerance(A, a, vv)
 
