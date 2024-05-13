@@ -1,8 +1,14 @@
 name: codecov upload
 # only run on merge into main branch
 on: 
-  - push
-  - pull_request
+  workflow_dispatch:
+  pull_request:
+  push:
+    branches:
+      - main
+  release:
+    types:
+      - published
 
 jobs:
   run-python:
