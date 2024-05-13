@@ -31,7 +31,7 @@ jobs:
       - name: Test
         working-directory: ${{github.workspace}}
         run: |
-          coverage run -m pytest -vv -x
+          coverage run -m pytest -x
           coverage xml
       
       - name: Upload coverage to Codecov
