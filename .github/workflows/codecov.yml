@@ -1,7 +1,6 @@
 name: codecov upload
 # only run on merge into main branch
 on: 
-  workflow_dispatch:
   pull_request:
   push:
     branches:
@@ -26,7 +25,7 @@ jobs:
 
       - name: Install
         run: |
-          pip install -v coverage Cython cython-coverage numpy pytest
+          pip install -v coverage Cython cython-coverage pytest scipy numpy
           ENABLE_COVERAGE=True python setup.py develop
 
       - name: Test
