@@ -18,7 +18,7 @@ SIZES = [1, 10, 100, 200]
 F_TYPES = [np.float32, np.float64, np.complex64, np.complex128]
 T_TYPES = [np.int8, np.int16, np.int32, np.int64, np.float32, np.float64, np.complex64, np.complex128]
 
-PARAMETERS = product(SIZES, T_TYPES, F_TYPES, F_TYPES, FORMATS)
+PARAMETERS = list(product(SIZES, T_TYPES, F_TYPES, F_TYPES, FORMATS))
 
 def test_get_matvec():
     A = random(10, 10, density=0.1, format="csr")
@@ -67,6 +67,32 @@ def test_matvec(N, dtype_A, dtype_a, dtype_v, format):
     dtype_a = np.result_type(dtype_A, dtype_a)
     a = np.asarray(-0.1, dtype=dtype_a)
     vv = np.random.rand(N).astype(dtype_v)
+
+    tol = get_tolerance(A, a, vv)
+
+    expected_u = a * A.dot(vv)
+    
+
+    out = np.random.normal(size=vv.shape).astype(expected_u.dtype)
+
+    u_1 = matvec(A, vv, a=a)
+    u_2 = matvec(A, vv, a=a, out=out, overwrite_out=True).copy()
+    u_3 = matvec(A, vv, a=a, out=out, overwrite_out=False)
+    assert almost_equal(expected_u, u_1, tol)
+    assert almost_equal(expected_u, u_2, tol)
+    expected_u += a * A.dot(vv)        
+    assert almost_equal(expected_u, u_3, tol)
+
+
+@pytest.mark.parametrize(("N", "dtype_A", "dtype_a", "dtype_v", "format"), PARAMETERS)
+def test_matvecs_C(N, dtype_A, dtype_a, dtype_v, format):
+
+    A = get_A(N, dtype_A, format)
+    dtype_a = np.result_type(dtype_A, dtype_a)
+    a = np.asarray(-0.1, dtype=dtype_a)
+    V = np.random.rand(N, 10).astype(dtype_v)
+    V = np.asfortranarray(V)
+    vv = V[:, 1::2]
 
     tol = get_tolerance(A, a, vv)
 
