@@ -15,9 +15,10 @@ np.random.seed(0)
 
 FORMATS = ["csr", "csc", "dia"]
 SIZES = [1, 10, 100, 200]
-TYPES = [np.float32, np.float64, np.complex64, np.complex128]
+F_TYPES = [np.float32, np.float64, np.complex64, np.complex128]
+T_TYPES = [np.int8, np.int16, np.int32, np.int64, np.float32, np.float64, np.complex64, np.complex128]
 
-PARAMETERS = product(SIZES, TYPES, TYPES, TYPES, FORMATS)
+PARAMETERS = product(SIZES, T_TYPES, F_TYPES, F_TYPES, FORMATS)
 
 def test_get_matvec():
     A = random(10, 10, density=0.1, format="csr")
@@ -43,10 +44,10 @@ def almost_equal(u, v, tol) -> bool:
 
 
 def get_tolerance(A, a, v):
-    dtype_A = A.dtype
-    dtype_a = a.dtype
-
-    tol = (np.finfo(dtype_A).eps * np.finfo(dtype_a).eps)**(0.25)
+    if isinstance(A, np.floating):
+        tol = (np.finfo(A.dtype).eps * np.finfo(a.dtype).eps * np.finfo(v.type).eps)**(1.0/(2.0*3))
+    else:
+        tol = (np.finfo(a.dtype).eps * np.finfo(v.dtype).eps)**(1.0/(2.0*2))
 
     A_norm = np.linalg.norm(A.toarray(), ord=np.inf)
     vv_norm = np.linalg.norm(v, ord=np.inf)
