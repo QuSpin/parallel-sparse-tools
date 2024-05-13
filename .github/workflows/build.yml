@@ -11,7 +11,6 @@ concurrency:
 
 
 jobs:
-
   build_wheels:
     name: Build wheels on ${{ matrix.os }} for CPython ${{ matrix.python }}
     runs-on: ${{ matrix.os }}
@@ -19,18 +18,13 @@ jobs:
       matrix:
         os: [ubuntu-20.04, windows-2019, macos-11]
         python: [cp39-*, cp310-*, cp311-*, cp312-*]
-        
-
     steps:
       - uses: actions/checkout@v4
-
       - name: Set up QEMU
         if: runner.os == 'Linux'
         uses: docker/setup-qemu-action@v3
         with:
           platforms: all
-
-
       - name: Build wheels
         uses: pypa/cibuildwheel@v2.16.2
         env:

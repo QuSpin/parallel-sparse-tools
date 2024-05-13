@@ -26,13 +26,13 @@ jobs:
 
       - name: Install
         run: |
-          pip install -v coverage Cython cython-coverage numpy
+          pip install -v coverage Cython cython-coverage numpy pytest
           ENABLE_COVERAGE=True python setup.py develop
 
       - name: Test
         working-directory: ${{github.workspace}}
         run: |
-          coverage run -m unittest discover
+          coverage run -m pytest -vv -x
           coverage xml
       
       - name: Upload coverage to Codecov
