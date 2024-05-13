@@ -1,35 +1,5 @@
-from ._oputils import _matvec
+from ._oputils import _matvec, _process_args
 from ._oputils import _get_matvec_function
-import numpy as np
-
-# goes into matvec python module
-def _prep_objects(matrix, scalar, vector, out=None):
-    scalar = np.array(scalar, dtype=np.result_type(matrix.dtype, scalar))
-    vector = vector.astype(
-        np.result_type(matrix.dtype, scalar.dtype, vector.dtype), copy=False
-    )
-
-    out_shape = (matrix.shape[:0] + vector.shape[1:])
-    out = np.asarray(out or np.zeros(out_shape, dtype=vector.dtype))
-
-
-    if out.dtype != vector.dtype:
-        raise ValueError(
-            "Incorrect dtype for out array. found: "
-            f"{out.dtype}, expected: {vector.dtype}"
-        )
-
-    if out.shape != out_shape:
-        raise ValueError(
-            "Dimension mismatch between out array and result of matrix-vector product. "
-            f"matrix.shape: {matrix.shape}, "
-            f"vector.shape: {vector.shape}, "
-            f"out.shape: {out.shape}"
-            )
-        
-    return matrix, scalar, vector, out
-
-
 
 
 def get_matvec_function(array):
@@ -121,5 +91,6 @@ def matvec(array, other, overwrite_out=False, out=None, a=1.0):
 
 
     """
+    array, other, overwrite_out, out, a = _process_args(array, other, overwrite_out, out, a)
 
     return _matvec(array, other, overwrite_out=overwrite_out, out=out, a=a)

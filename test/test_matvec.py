@@ -11,6 +11,13 @@ from parallel_sparse_tools.matvec._oputils import (
 from scipy.sparse import random
 import numpy as np
 
+np.random.seed(0)
+
+FORMATS = ["csr", "csc", "dia"]
+SIZES = [1, 10, 100, 200]
+TYPES = [np.float32, np.float64, np.complex64, np.complex128]
+
+PARAMETERS = product(SIZES, TYPES, TYPES, TYPES, FORMATS)
 
 def test_get_matvec():
     A = random(10, 10, density=0.1, format="csr")
@@ -30,31 +37,48 @@ def test_get_matvec():
     assert get_matvec_function(A) is _other_dot
 
 
-@pytest.mark.parametrize("N", [2, 4, 8, 16, 32, 64, 128])
-def test_matvec(N):
-    np.random.seed(0)
+def almost_equal(u, v, tol) -> bool:
+    norm = np.linalg.norm(u - v, ord=np.inf)
+    return  norm <= tol
 
-    dtypes = [np.float32, np.float64, np.complex64, np.complex128]
-    for dtype_A, dtype_v in product(dtypes, dtypes):
-        print(dtype_v, dtype_A)
 
-        A = random(N, N, density=0.1, format="csr", dtype=dtype_A)
-        v = np.random.rand(N).astype(dtype_v)
-        V = np.random.rand(N, 4).astype(dtype_v)
-        V_f = np.asfortranarray(V).astype(dtype_v)
-        V_s = V[:, 1::2]
+def get_tolerance(A, a, v):
+    dtype_A = A.dtype
+    dtype_a = a.dtype
 
-        a = np.asarray(-0.1, dtype=dtype_A)
+    tol = (np.finfo(dtype_A).eps * np.finfo(dtype_a).eps)**(0.25)
 
-        for vv in [v, V, V_f, V_s]:
-            expected_u = a * A.dot(vv)
+    A_norm = np.linalg.norm(A.toarray(), ord=np.inf)
+    vv_norm = np.linalg.norm(v, ord=np.inf)
 
-            out = np.zeros(vv.shape, dtype=expected_u.dtype)
+    tol = tol * A_norm * vv_norm
+    return tol
 
-            u_1 = matvec(A, vv, a=a)
-            u_2 = matvec(A, vv, a=a, out=out, overwrite_out=True).copy()
-            u_3 = matvec(A, vv, a=a, out=out, overwrite_out=False)
 
-            assert np.allclose(expected_u, u_1)
-            assert np.allclose(expected_u, u_2)
-            assert np.allclose(2 * expected_u, u_3)
+def get_A(N, dtype, format):
+    return random(N, N, density=min(0.1, np.log(N)/N), format=format, dtype=dtype)
+
+
+@pytest.mark.parametrize(("N", "dtype_A", "dtype_a", "dtype_v", "format"), PARAMETERS)
+def test_matvec(N, dtype_A, dtype_a, dtype_v, format):
+
+    A = get_A(N, dtype_A, format)
+    dtype_a = np.result_type(dtype_A, dtype_a)
+    a = np.asarray(-0.1, dtype=dtype_a)
+    vv = np.random.rand(N).astype(dtype_v)
+
+    tol = get_tolerance(A, a, vv)
+
+    expected_u = a * A.dot(vv)
+    
+
+    out = np.random.normal(size=vv.shape).astype(expected_u.dtype)
+
+    u_1 = matvec(A, vv, a=a)
+    u_2 = matvec(A, vv, a=a, out=out, overwrite_out=True).copy()
+    u_3 = matvec(A, vv, a=a, out=out, overwrite_out=False)
+    assert almost_equal(expected_u, u_1, tol)
+    assert almost_equal(expected_u, u_2, tol)
+    expected_u += a * A.dot(vv)        
+    assert almost_equal(expected_u, u_3, tol)
+

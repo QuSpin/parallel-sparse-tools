@@ -65,7 +65,7 @@ cdef void _csr_matvec(bool overwrite_y, ndarray Ap,ndarray Aj, ndarray Ax,ndarra
   cdef PyArray_Descr * dtype1 = np.PyArray_DESCR(Ap)
   cdef PyArray_Descr * dtype2 = np.PyArray_DESCR(Ax)
   cdef PyArray_Descr * dtype3 = np.PyArray_DESCR(a)
-  cdef PyArray_Descr * dtype4 = np.PyArray_DESCR(Xx)
+  cdef PyArray_Descr * dtype4 = np.PyArray_DESCR(Yx)
   cdef npy_intp ys = np.PyArray_STRIDE(Yx,0)
   cdef npy_intp xs = np.PyArray_STRIDE(Xx,0)
   cdef int switch_num = get_switch_num(dtype1,dtype2,dtype3,dtype4)
@@ -77,7 +77,7 @@ cdef void _csr_matvec(bool overwrite_y, ndarray Ap,ndarray Aj, ndarray Ax,ndarra
   cdef void * a_ptr  = np.PyArray_DATA(a)
   cdef npy_intp nr = np.PyArray_DIM(Yx,0)
   cdef npy_intp nc = np.PyArray_DIM(Xx,0)
-
+  print(switch_num, "T1=",Ax.dtype, "T2=",Xx.dtype, "T3=", Yx.dtype)
   if switch_num < 0:
     raise TypeError("invalid types")
 
@@ -91,7 +91,7 @@ cdef void _csr_matvecs(bool overwrite_y, ndarray Ap,ndarray Aj, ndarray Ax,ndarr
   cdef PyArray_Descr * dtype1 = np.PyArray_DESCR(Ap)
   cdef PyArray_Descr * dtype2 = np.PyArray_DESCR(Ax)
   cdef PyArray_Descr * dtype3 = np.PyArray_DESCR(a)
-  cdef PyArray_Descr * dtype4 = np.PyArray_DESCR(Xx)
+  cdef PyArray_Descr * dtype4 = np.PyArray_DESCR(Yx)
   cdef npy_intp ysr = np.PyArray_STRIDE(Yx,0)
   cdef npy_intp xsr = np.PyArray_STRIDE(Xx,0)
   cdef npy_intp ysc = np.PyArray_STRIDE(Yx,1)
@@ -121,7 +121,7 @@ cdef void _csc_matvec(bool overwrite_y, ndarray Ap,ndarray Aj, ndarray Ax,ndarra
   cdef PyArray_Descr * dtype1 = np.PyArray_DESCR(Ap)
   cdef PyArray_Descr * dtype2 = np.PyArray_DESCR(Ax)
   cdef PyArray_Descr * dtype3 = np.PyArray_DESCR(a)
-  cdef PyArray_Descr * dtype4 = np.PyArray_DESCR(Xx)
+  cdef PyArray_Descr * dtype4 = np.PyArray_DESCR(Yx)
   cdef npy_intp ys = np.PyArray_STRIDE(Yx,0)
   cdef npy_intp xs = np.PyArray_STRIDE(Xx,0)
   cdef int switch_num = get_switch_num(dtype1,dtype2,dtype3,dtype4)
@@ -147,7 +147,7 @@ cdef void _csc_matvecs(bool overwrite_y, ndarray Ap,ndarray Aj, ndarray Ax,ndarr
   cdef PyArray_Descr * dtype1 = np.PyArray_DESCR(Ap)
   cdef PyArray_Descr * dtype2 = np.PyArray_DESCR(Ax)
   cdef PyArray_Descr * dtype3 = np.PyArray_DESCR(a)
-  cdef PyArray_Descr * dtype4 = np.PyArray_DESCR(Xx)
+  cdef PyArray_Descr * dtype4 = np.PyArray_DESCR(Yx)
   cdef npy_intp ysr = np.PyArray_STRIDE(Yx,0)
   cdef npy_intp xsr = np.PyArray_STRIDE(Xx,0)
   cdef npy_intp ysc = np.PyArray_STRIDE(Yx,1)
@@ -178,7 +178,7 @@ cdef void _dia_matvec(bool overwrite_y, ndarray offsets ,ndarray diags, ndarray 
   cdef PyArray_Descr * dtype1 = np.PyArray_DESCR(offsets)
   cdef PyArray_Descr * dtype2 = np.PyArray_DESCR(diags)
   cdef PyArray_Descr * dtype3 = np.PyArray_DESCR(a)
-  cdef PyArray_Descr * dtype4 = np.PyArray_DESCR(Xx)
+  cdef PyArray_Descr * dtype4 = np.PyArray_DESCR(Yx)
   cdef npy_intp ys = np.PyArray_STRIDE(Yx,0)
   cdef npy_intp xs = np.PyArray_STRIDE(Xx,0)
   cdef int switch_num = get_switch_num(dtype1,dtype2,dtype3,dtype4)
@@ -205,7 +205,7 @@ cdef void _dia_matvecs(bool overwrite_y, ndarray offsets ,ndarray diags, ndarray
   cdef PyArray_Descr * dtype1 = np.PyArray_DESCR(offsets)
   cdef PyArray_Descr * dtype2 = np.PyArray_DESCR(diags)
   cdef PyArray_Descr * dtype3 = np.PyArray_DESCR(a)
-  cdef PyArray_Descr * dtype4 = np.PyArray_DESCR(Xx)
+  cdef PyArray_Descr * dtype4 = np.PyArray_DESCR(Yx)
   cdef npy_intp ysr = np.PyArray_STRIDE(Yx,0)
   cdef npy_intp xsr = np.PyArray_STRIDE(Xx,0)
   cdef npy_intp ysc = np.PyArray_STRIDE(Yx,1)
@@ -232,13 +232,39 @@ cdef void _dia_matvecs(bool overwrite_y, ndarray offsets ,ndarray diags, ndarray
       dia_matvecs_nogil(switch_num,overwrite_y,nr,nc,nv,nd,L,offsets_ptr,diags_ptr,a_ptr,xsr,xsc,Xx_ptr,ysr,ysc,Yx_ptr)
 
 
-def _csr_dot(mat_obj,other,overwrite_out=False,out=None,a=1.0):
+def _prep_objects(mat_obj, other, overwrite_out, out, a):
+  a_dtype = _np.result_type(_np.float32, _np.min_scalar_type(a))
+  a = _np.array(a, dtype=a_dtype)
+  result_dtype = _np.result_type(mat_obj.dtype, a.dtype, other.dtype)
+
   if out is None:
     overwrite_out = True
-    result_dtype = _np.result_type(mat_obj.dtype,other.dtype)
-    out = _np.zeros(mat_obj.shape[:1]+other.shape[1:],dtype=result_dtype,order="C")
+    out = _np.zeros(mat_obj.shape[:1]+other.shape[1:], dtype=result_dtype, order="C")
+  
+  return mat_obj, other.astype(out.dtype), overwrite_out, out, a, result_dtype
 
-  a = _np.array(a,dtype=mat_obj.dtype)
+def _process_args(mat_obj, other, overwrite_out, out, a):
+  mat_obj, other, overwrite_out, out, a, result_dtype = _prep_objects(mat_obj, other, overwrite_out, out, a)
+
+  expected_shape = mat_obj.shape[:1]+other.shape[1:]
+  if out.dtype != other.dtype:
+      raise ValueError(
+          "Incorrect dtype for out array. found: "
+          f"{out.dtype}, expected: {result_dtype}"
+      )
+
+  if out.shape != out.shape:
+      raise ValueError(
+          "Dimension mismatch between out array and result of matrix-vector product. "
+          f"matrix.shape: {mat_obj.shape}, "
+          f"vector.shape: {other.shape}, "
+          f"out.shape: {out.shape}"
+          )
+
+  return mat_obj, other, overwrite_out, out, a
+
+def _csr_dot(mat_obj,other,overwrite_out=False,out=None,a=1.0):
+  mat_obj, other, overwrite_out, out, a, _ = _prep_objects(mat_obj, other, overwrite_out, out, a)
   if other.ndim == 1:
     _csr_matvec(overwrite_out,mat_obj.indptr,mat_obj.indices,mat_obj.data,a,other,out)
   else:
@@ -248,12 +274,8 @@ def _csr_dot(mat_obj,other,overwrite_out=False,out=None,a=1.0):
 
 
 def _csc_dot(mat_obj,other,overwrite_out=False,out=None,a=1.0):
-  if out is None:
-    overwrite_out = True
-    result_dtype = _np.result_type(mat_obj.dtype,other.dtype)
-    out = _np.zeros(mat_obj.shape[:1]+other.shape[1:],dtype=result_dtype,order="C")
+  mat_obj, other, overwrite_out, out, a, _ = _prep_objects(mat_obj, other, overwrite_out, out, a)
 
-  a = _np.array(a,dtype=mat_obj.dtype)
   if other.ndim == 1:
     _csc_matvec(overwrite_out,mat_obj.indptr,mat_obj.indices,mat_obj.data,a,other,out)
   else:
@@ -263,12 +285,8 @@ def _csc_dot(mat_obj,other,overwrite_out=False,out=None,a=1.0):
 
 
 def _dia_dot(mat_obj,other,overwrite_out=False,out=None,a=1.0):
-  if out is None:
-    overwrite_out = True
-    result_dtype = _np.result_type(mat_obj.dtype,other.dtype)
-    out = _np.zeros(mat_obj.shape[:1]+other.shape[1:],dtype=result_dtype,order="C")
+  mat_obj, other, overwrite_out, out, a, _ = _prep_objects(mat_obj, other, overwrite_out, out, a)
 
-  a = _np.array(a,dtype=mat_obj.dtype)
   if other.ndim == 1:
     _dia_matvec(overwrite_out,mat_obj.offsets,mat_obj.data,a,other,out)
   else:
@@ -278,10 +296,7 @@ def _dia_dot(mat_obj,other,overwrite_out=False,out=None,a=1.0):
 
 
 def _other_dot(mat_obj,other,overwrite_out=False,out=None,a=1.0):
-  if out is None:
-    overwrite_out = True
-    result_dtype = _np.result_type(mat_obj.dtype,other.dtype)
-    out = _np.zeros(mat_obj.shape[:1]+other.shape[1:],dtype=result_dtype,order="C")
+  mat_obj, other, overwrite_out, out, a, _ = _prep_objects(mat_obj, other, overwrite_out, out, a)
 
   inter_res = mat_obj.dot(other)
 
