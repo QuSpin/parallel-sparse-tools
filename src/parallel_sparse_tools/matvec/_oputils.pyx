@@ -77,7 +77,7 @@ cdef void _csr_matvec(bool overwrite_y, ndarray Ap,ndarray Aj, ndarray Ax,ndarra
   cdef void * a_ptr  = np.PyArray_DATA(a)
   cdef npy_intp nr = np.PyArray_DIM(Yx,0)
   cdef npy_intp nc = np.PyArray_DIM(Xx,0)
-  print(switch_num, "T1=",Ax.dtype, "T2=",Xx.dtype, "T3=", Yx.dtype)
+
   if switch_num < 0:
     raise TypeError("invalid types")
 
