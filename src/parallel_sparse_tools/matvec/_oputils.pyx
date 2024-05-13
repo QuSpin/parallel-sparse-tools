@@ -1,5 +1,6 @@
 # cython: language_level=2
-## cython: profile=True
+# cython: linetrace=True
+# distutils: define_macros=CYTHON_TRACE_NOGIL=1
 # distutils: language=c++
 cimport numpy as np
 import cython
