@@ -43,7 +43,7 @@ before-build = ""
 repair-wheel-command = ""
 
 before-test = ""
-test-command = "pytest -vv {project}/tests"
+test-command = "pytest {project}/test"
 test-requires = ["pytest"]
 test-extras = []
 
