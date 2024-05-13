@@ -1,11 +1,6 @@
 name: Build and Publish
 
 on:
-  workflow_dispatch:
-  pull_request:
-  push:
-    branches:
-      - main
   release:
     types:
       - published
@@ -16,34 +11,6 @@ concurrency:
 
 
 jobs:
-
-  coverage:
-    name: Generate coverage report
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Set up Python
-        uses: actions/setup-python@v2
-        with:
-          python-version: 3.9
-
-      - name: Install dependencies
-        run: pip install -r requirements-dev.txt
-      
-      - name: Install package
-        run: pip install -e .
-
-      - name: Run tests
-        run: coverage run -m pytest tests && coverage xml
-
-      - name: Upload coverage report
-        uses: codecov/codecov-action@v1
-        with:
-          file: ./coverage.xml
-          flags: pytest
-
-
   build_wheels:
     name: Build wheels on ${{ matrix.os }} for CPython ${{ matrix.python }}
     runs-on: ${{ matrix.os }}
@@ -51,20 +18,15 @@ jobs:
       matrix:
         os: [ubuntu-20.04, windows-2019, macos-11]
         python: [cp39-*, cp310-*, cp311-*, cp312-*]
-        
-
     steps:
       - uses: actions/checkout@v4
-
       - name: Set up QEMU
         if: runner.os == 'Linux'
         uses: docker/setup-qemu-action@v3
         with:
           platforms: all
-
-
       - name: Build wheels
-        uses: pypa/cibuildwheel@v2.16.2
+        uses: pypa/cibuildwheel@v2
         env:
           CIBW_BUILD: ${{ matrix.python }}
       - uses: actions/upload-artifact@v3
@@ -80,7 +42,7 @@ jobs:
       - name: Build sdist
         run: pipx run build --sdist
 
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           path: dist/*.tar.gz
 

@@ -21,6 +21,18 @@ def extra_compile_args() -> List[str]:
     else:
         extra_compile_args = ["-fopenmp"]
 
+    if os.environ.get("COVERAGE", False):
+        if sys.platform in ["win32", "cygwin", "win64", "darwin"]:
+            raise ValueError("Coverage is not supported on Windows or macOS")
+        
+        extra_compile_args += [
+            '--coverage', 
+            '-fno-inline', 
+            '-fno-inline-small-functions', 
+            '-fno-default-inline', 
+            '-O0'
+        ]        
+
     return extra_compile_args
 
 
@@ -36,6 +48,12 @@ def extra_link_args() -> List[str]:
         ]
     else:
         extra_link_args = ["-fopenmp"]
+
+    if os.environ.get("COVERAGE", False):
+        if sys.platform in ["win32", "cygwin", "win64", "darwin"]:
+            raise ValueError("Coverage is not supported on Windows or macOS")
+        
+        extra_link_args += ["--coverage"]
 
     return extra_link_args
 

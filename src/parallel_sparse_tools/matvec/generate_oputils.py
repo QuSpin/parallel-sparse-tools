@@ -1,3 +1,4 @@
+import itertools
 import numpy as np
 from numpy import int8, int16, int32, int64, float32, float64, complex64, complex128
 import os
@@ -27,9 +28,13 @@ numpy_numtypes = {
 
 
 I_types = [int32, int64]
-T_types = [complex128, float64, complex64, float32]
+T_types = [int8, int16, int32, int64, complex128, float64, complex64, float32]
 F_types = [complex128, float64, complex64, float32]
 
+# dtype1: indices dtype
+# dtype2: matrix dtype
+# dtype3: scalar dtype
+# dtype4: vector dtype
 
 get_switch_body = """
 #include <iostream>
@@ -44,8 +49,23 @@ int get_switch_num(PyArray_Descr * dtype1,PyArray_Descr * dtype2,PyArray_Descr *
 	return -1;
 }}"""
 
+# Vectors are the same type for input and output
+# This is to reduce the number of combinations
+# We can always cast the input to the appropriate
+# type for the output with no loss of precision
+# and with little overhead.
+
+def get_eq(name, T):
+    if T in [int8, int16, int32, int64]:
+        return f"PyArray_EquivTypenums({name},{numpy_numtypes[T]})"
+    else:
+        return f"{name} == {numpy_numtypes[T]}"
 
 def generate_get_switch():
+    # T1: matrix dtype
+    # T2: 'a' dtype
+    # T3: output/input vector dtype
+    switches = []
     switch_num = 0
     body = "if(0){}\n"
     for I in I_types:
@@ -55,42 +75,25 @@ def generate_get_switch():
                 numpy_numtypes[I]
             )
         )
-        for T1 in T_types:
-            if T1 in [int8, int16]:
-                T2_types = F_types
-            else:
-                T2_types = [T1]
-
-            for T2 in T2_types:
-                for T3 in F_types:
-                    R = np.result_type(T1, T2)
-                    if np.can_cast(R, T3) and np.can_cast(R, T2):
-                        if T1 in [int8, int16]:
-                            body = (
-                                body
-                                + "\t\telse if(PyArray_EquivTypenums(T1,{}) && T2=={} && T3=={}){{return {};}}\n".format(
-                                    numpy_numtypes[T1],
-                                    numpy_numtypes[T2],
-                                    numpy_numtypes[T3],
-                                    switch_num,
-                                )
-                            )
-                        else:
-                            body = (
-                                body
-                                + "\t\telse if(T1=={} && T2=={} && T3=={}){{return {};}}\n".format(
-                                    numpy_numtypes[T1],
-                                    numpy_numtypes[T2],
-                                    numpy_numtypes[T3],
-                                    switch_num,
-                                )
-                            )
-                        switch_num += 1
+        for T1, T2, T3 in itertools.product(T_types, F_types, F_types):
+            R = np.result_type(T1, T2, T3)
+            if R.char == np.dtype(T3).char:
+                switches.append((switch_num, I, T1, T2, T3))
+                checks = [get_eq("T1", T1), get_eq("T2", T2), get_eq("T3", T3)]
+                get_eqs = " && ".join([x for x in checks if x is not None])
+                body = (
+                    body
+                    + "\t\telse if({}){{return {};}}\n".format(
+                        get_eqs,
+                        switch_num,
+                    )
+                )
+                switch_num += 1
 
         body = body + "\t\telse {return -1;}\n\t}\n"
     body = body + "\telse {return -1;}\n"
 
-    return get_switch_body.format(body)
+    return switches, get_switch_body.format(body)
 
 
 comp_body = """
@@ -180,7 +183,7 @@ void {fmt}_matvecs_nogil(const int switch_num,
 }}"""
 
 
-def generate_csr():
+def generate_csr(switches):
     switch_num = 0
     matvec_gil_body = ""
     matvec_nogil_body = ""
@@ -189,66 +192,55 @@ def generate_csr():
     case_tmp = "\n\t\tcase {} :\n\t\t\t{}\n\t\t\tbreak;"
     matvec_tmp = "{fmt}_matvec_{omp}<{I},{T1},{T2},{T3}>(overwrite_y,(const {I})n_row,(const {I})n_col,(const {I}*)Ap,(const {I}*)Aj,(const {T1}*)Ax,*(const {T2}*)a,x_stride_byte,(const {T3}*)x,y_stride_byte,({T3}*)y);"
     matvecs_tmp = "{fmt}_matvecs_{omp}<{I},{T1},{T2},{T3}>(overwrite_y,(const {I})n_row,(const {I})n_col,n_vecs,(const {I}*)Ap,(const {I}*)Aj,(const {T1}*)Ax,*(const {T2}*)a,x_stride_row_byte,x_stride_col_byte,(const {T3}*)x,y_stride_row_byte,y_stride_col_byte,({T3}*)y);"
-    for I in I_types:
-        for T1 in T_types:
-            if T1 in [int8, int16]:
-                T2_types = F_types
-            else:
-                T2_types = [T1]
+    for switch_num, I, T1, T2, T3 in switches:
+        call = matvec_tmp.format(
+            fmt="csr",
+            omp="omp",
+            I=numpy_ctypes[I],
+            T1=numpy_ctypes[T1],
+            T2=numpy_ctypes[T2],
+            T3=numpy_ctypes[T3],
+        )
+        matvec_nogil_body = matvec_nogil_body + case_tmp.format(
+            switch_num, call
+        )
 
-            for T2 in T2_types:
-                for T3 in F_types:
-                    R = np.result_type(T1, T2)
-                    if np.can_cast(R, T3) and np.can_cast(R, T2):
-                        call = matvec_tmp.format(
-                            fmt="csr",
-                            omp="omp",
-                            I=numpy_ctypes[I],
-                            T1=numpy_ctypes[T1],
-                            T2=numpy_ctypes[T2],
-                            T3=numpy_ctypes[T3],
-                        )
-                        matvec_nogil_body = matvec_nogil_body + case_tmp.format(
-                            switch_num, call
-                        )
+        call = matvec_tmp.format(
+            fmt="csr",
+            omp="noomp",
+            I=numpy_ctypes[I],
+            T1=numpy_ctypes[T1],
+            T2=numpy_ctypes[T2],
+            T3=numpy_ctypes[T3],
+        )
+        matvec_gil_body = matvec_gil_body + case_tmp.format(
+            switch_num, call
+        )
 
-                        call = matvec_tmp.format(
-                            fmt="csr",
-                            omp="noomp",
-                            I=numpy_ctypes[I],
-                            T1=numpy_ctypes[T1],
-                            T2=numpy_ctypes[T2],
-                            T3=numpy_ctypes[T3],
-                        )
-                        matvec_gil_body = matvec_gil_body + case_tmp.format(
-                            switch_num, call
-                        )
+        call = matvecs_tmp.format(
+            fmt="csr",
+            omp="omp",
+            I=numpy_ctypes[I],
+            T1=numpy_ctypes[T1],
+            T2=numpy_ctypes[T2],
+            T3=numpy_ctypes[T3],
+        )
+        matvecs_nogil_body = matvecs_nogil_body + case_tmp.format(
+            switch_num, call
+        )
 
-                        call = matvecs_tmp.format(
-                            fmt="csr",
-                            omp="omp",
-                            I=numpy_ctypes[I],
-                            T1=numpy_ctypes[T1],
-                            T2=numpy_ctypes[T2],
-                            T3=numpy_ctypes[T3],
-                        )
-                        matvecs_nogil_body = matvecs_nogil_body + case_tmp.format(
-                            switch_num, call
-                        )
+        call = matvecs_tmp.format(
+            fmt="csr",
+            omp="noomp",
+            I=numpy_ctypes[I],
+            T1=numpy_ctypes[T1],
+            T2=numpy_ctypes[T2],
+            T3=numpy_ctypes[T3],
+        )
+        matvecs_gil_body = matvecs_gil_body + case_tmp.format(
+            switch_num, call
+        )
 
-                        call = matvecs_tmp.format(
-                            fmt="csr",
-                            omp="noomp",
-                            I=numpy_ctypes[I],
-                            T1=numpy_ctypes[T1],
-                            T2=numpy_ctypes[T2],
-                            T3=numpy_ctypes[T3],
-                        )
-                        matvecs_gil_body = matvecs_gil_body + case_tmp.format(
-                            switch_num, call
-                        )
-
-                        switch_num += 1
 
     return comp_body.format(
         fmt="csr",
@@ -259,7 +251,7 @@ def generate_csr():
     )
 
 
-def generate_csc():
+def generate_csc(switches):
     switch_num = 0
     matvec_gil_body = ""
     matvec_nogil_body = ""
@@ -268,66 +260,55 @@ def generate_csc():
     case_tmp = "\n\t\tcase {} :\n\t\t\t{}\n\t\t\tbreak;"
     matvec_tmp = "{fmt}_matvec_{omp}<{I},{T1},{T2},{T3}>(overwrite_y,(const {I})n_row,(const {I})n_col,(const {I}*)Ap,(const {I}*)Aj,(const {T1}*)Ax,*(const {T2}*)a,x_stride_byte,(const {T3}*)x,y_stride_byte,({T3}*)y);"
     matvecs_tmp = "{fmt}_matvecs_{omp}<{I},{T1},{T2},{T3}>(overwrite_y,(const {I})n_row,(const {I})n_col,n_vecs,(const {I}*)Ap,(const {I}*)Aj,(const {T1}*)Ax,*(const {T2}*)a,x_stride_row_byte,x_stride_col_byte,(const {T3}*)x,y_stride_row_byte,y_stride_col_byte,({T3}*)y);"
-    for I in I_types:
-        for T1 in T_types:
-            if T1 in [int8, int16]:
-                T2_types = F_types
-            else:
-                T2_types = [T1]
+    for switch_num, I, T1, T2, T3 in switches:
+        call = matvec_tmp.format(
+            fmt="csc",
+            omp="omp",
+            I=numpy_ctypes[I],
+            T1=numpy_ctypes[T1],
+            T2=numpy_ctypes[T2],
+            T3=numpy_ctypes[T3],
+        )
+        matvec_nogil_body = matvec_nogil_body + case_tmp.format(
+            switch_num, call
+        )
 
-            for T2 in T2_types:
-                for T3 in F_types:
-                    R = np.result_type(T1, T2)
-                    if np.can_cast(R, T3) and np.can_cast(R, T2):
-                        call = matvec_tmp.format(
-                            fmt="csc",
-                            omp="omp",
-                            I=numpy_ctypes[I],
-                            T1=numpy_ctypes[T1],
-                            T2=numpy_ctypes[T2],
-                            T3=numpy_ctypes[T3],
-                        )
-                        matvec_nogil_body = matvec_nogil_body + case_tmp.format(
-                            switch_num, call
-                        )
+        call = matvec_tmp.format(
+            fmt="csc",
+            omp="noomp",
+            I=numpy_ctypes[I],
+            T1=numpy_ctypes[T1],
+            T2=numpy_ctypes[T2],
+            T3=numpy_ctypes[T3],
+        )
+        matvec_gil_body = matvec_gil_body + case_tmp.format(
+            switch_num, call
+        )
 
-                        call = matvec_tmp.format(
-                            fmt="csc",
-                            omp="noomp",
-                            I=numpy_ctypes[I],
-                            T1=numpy_ctypes[T1],
-                            T2=numpy_ctypes[T2],
-                            T3=numpy_ctypes[T3],
-                        )
-                        matvec_gil_body = matvec_gil_body + case_tmp.format(
-                            switch_num, call
-                        )
+        call = matvecs_tmp.format(
+            fmt="csc",
+            omp="omp",
+            I=numpy_ctypes[I],
+            T1=numpy_ctypes[T1],
+            T2=numpy_ctypes[T2],
+            T3=numpy_ctypes[T3],
+        )
+        matvecs_nogil_body = matvecs_nogil_body + case_tmp.format(
+            switch_num, call
+        )
 
-                        call = matvecs_tmp.format(
-                            fmt="csc",
-                            omp="omp",
-                            I=numpy_ctypes[I],
-                            T1=numpy_ctypes[T1],
-                            T2=numpy_ctypes[T2],
-                            T3=numpy_ctypes[T3],
-                        )
-                        matvecs_nogil_body = matvecs_nogil_body + case_tmp.format(
-                            switch_num, call
-                        )
+        call = matvecs_tmp.format(
+            fmt="csc",
+            omp="noomp",
+            I=numpy_ctypes[I],
+            T1=numpy_ctypes[T1],
+            T2=numpy_ctypes[T2],
+            T3=numpy_ctypes[T3],
+        )
+        matvecs_gil_body = matvecs_gil_body + case_tmp.format(
+            switch_num, call
+        )
 
-                        call = matvecs_tmp.format(
-                            fmt="csc",
-                            omp="noomp",
-                            I=numpy_ctypes[I],
-                            T1=numpy_ctypes[T1],
-                            T2=numpy_ctypes[T2],
-                            T3=numpy_ctypes[T3],
-                        )
-                        matvecs_gil_body = matvecs_gil_body + case_tmp.format(
-                            switch_num, call
-                        )
-
-                        switch_num += 1
 
     return comp_body.format(
         fmt="csc",
@@ -429,7 +410,7 @@ void dia_matvecs_nogil(const int switch_num,
 }}"""
 
 
-def generate_dia():
+def generate_dia(switches):
     switch_num = 0
     matvec_gil_body = ""
     matvec_nogil_body = ""
@@ -438,62 +419,50 @@ def generate_dia():
     case_tmp = "\n\t\tcase {} :\n\t\t\t{}\n\t\t\tbreak;"
     matvec_tmp = "dia_matvec_{omp}<{I},{T1},{T2},{T3}>(overwrite_y,(const {I})n_row,(const {I})n_col,(const {I})n_diags,(const {I})L,(const {I}*)offsets,(const {T1}*)diags,*(const {T2}*)a,x_stride_byte,(const {T3}*)x,y_stride_byte,({T3}*)y);"
     matvecs_tmp = "dia_matvecs_{omp}<{I},{T1},{T2},{T3}>(overwrite_y,(const {I})n_row,(const {I})n_col,n_vecs,(const {I})n_diags,(const {I})L,(const {I}*)offsets,(const {T1}*)diags,*(const {T2}*)a,x_stride_row_byte,x_stride_col_byte,(const {T3}*)x,y_stride_row_byte,y_stride_col_byte,({T3}*)y);"
-    for I in I_types:
-        for T1 in T_types:
-            if T1 in [int8, int16]:
-                T2_types = F_types
-            else:
-                T2_types = [T1]
+    for switch_num, I, T1, T2, T3 in switches:
+        call = matvec_tmp.format(
+            omp="omp",
+            I=numpy_ctypes[I],
+            T1=numpy_ctypes[T1],
+            T2=numpy_ctypes[T2],
+            T3=numpy_ctypes[T3],
+        )
+        matvec_nogil_body = matvec_nogil_body + case_tmp.format(
+            switch_num, call
+        )
 
-            for T2 in T2_types:
-                for T3 in F_types:
-                    R = np.result_type(T1, T2)
-                    if np.can_cast(R, T3) and np.can_cast(R, T2):
-                        call = matvec_tmp.format(
-                            omp="omp",
-                            I=numpy_ctypes[I],
-                            T1=numpy_ctypes[T1],
-                            T2=numpy_ctypes[T2],
-                            T3=numpy_ctypes[T3],
-                        )
-                        matvec_nogil_body = matvec_nogil_body + case_tmp.format(
-                            switch_num, call
-                        )
+        call = matvec_tmp.format(
+            omp="noomp",
+            I=numpy_ctypes[I],
+            T1=numpy_ctypes[T1],
+            T2=numpy_ctypes[T2],
+            T3=numpy_ctypes[T3],
+        )
+        matvec_gil_body = matvec_gil_body + case_tmp.format(
+            switch_num, call
+        )
 
-                        call = matvec_tmp.format(
-                            omp="noomp",
-                            I=numpy_ctypes[I],
-                            T1=numpy_ctypes[T1],
-                            T2=numpy_ctypes[T2],
-                            T3=numpy_ctypes[T3],
-                        )
-                        matvec_gil_body = matvec_gil_body + case_tmp.format(
-                            switch_num, call
-                        )
+        call = matvecs_tmp.format(
+            omp="omp",
+            I=numpy_ctypes[I],
+            T1=numpy_ctypes[T1],
+            T2=numpy_ctypes[T2],
+            T3=numpy_ctypes[T3],
+        )
+        matvecs_nogil_body = matvecs_nogil_body + case_tmp.format(
+            switch_num, call
+        )
 
-                        call = matvecs_tmp.format(
-                            omp="omp",
-                            I=numpy_ctypes[I],
-                            T1=numpy_ctypes[T1],
-                            T2=numpy_ctypes[T2],
-                            T3=numpy_ctypes[T3],
-                        )
-                        matvecs_nogil_body = matvecs_nogil_body + case_tmp.format(
-                            switch_num, call
-                        )
-
-                        call = matvecs_tmp.format(
-                            omp="noomp",
-                            I=numpy_ctypes[I],
-                            T1=numpy_ctypes[T1],
-                            T2=numpy_ctypes[T2],
-                            T3=numpy_ctypes[T3],
-                        )
-                        matvecs_gil_body = matvecs_gil_body + case_tmp.format(
-                            switch_num, call
-                        )
-
-                        switch_num += 1
+        call = matvecs_tmp.format(
+            omp="noomp",
+            I=numpy_ctypes[I],
+            T1=numpy_ctypes[T1],
+            T2=numpy_ctypes[T2],
+            T3=numpy_ctypes[T3],
+        )
+        matvecs_gil_body = matvecs_gil_body + case_tmp.format(
+            switch_num, call
+        )
 
     return dia_body.format(
         matvec_nogil_body=matvec_nogil_body,
@@ -518,10 +487,10 @@ inline bool EquivTypes(PyArray_Descr * dtype1,PyArray_Descr * dtype2){{
 
 
 def generate_oputils():
-    header_body = generate_get_switch()
-    header_body = header_body + generate_csr()
-    header_body = header_body + generate_csc()
-    header_body = header_body + generate_dia()
+    switches, header_body = generate_get_switch()
+    header_body = header_body + generate_csr(switches)
+    header_body = header_body + generate_csc(switches)
+    header_body = header_body + generate_dia(switches)
     oputils_impl_header.format(header_body=header_body)
     path = os.path.join(os.path.dirname(__file__), "_oputils", "oputils_impl.h")
     IO = open(path, "w")
