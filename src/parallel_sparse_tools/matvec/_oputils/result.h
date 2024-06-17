@@ -14,5 +14,4 @@ template <typename T> struct result_type<T> {
   using type = T;
 };
 
-
 #endif // __oputils_result_h__
