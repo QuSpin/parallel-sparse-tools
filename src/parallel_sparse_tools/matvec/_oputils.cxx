@@ -19,7 +19,12 @@ using array_variants = std::variant<
 
 using index_variants = std::variant<py::array_t<int32_t>, py::array_t<int64_t>>;
 
-array_variants get_array(py::array &arr) {
+array_variants get_array(py::array &arr, const std::string &name,
+                         const int ndim = -1) {
+  if (ndim >= 0 && arr.ndim() != ndim) {
+    throw std::invalid_argument("Array " + name + " must be " +
+                                std::to_string(ndim) + "-dimensional");
+  }
   const int type_num = arr.dtype().num();
   switch (type_num) {
   case py::detail::npy_api::NPY_BOOL_:
@@ -87,15 +92,15 @@ enum class ReturnState {
 };
 
 template <typename X, typename Y>
-ReturnState check_arrays(X x, Y y, const npy_intp n_row, const npy_intp n_col) {
+ReturnState check_arrays(const npy_intp n_col, const npy_intp n_row, X x, Y y) {
   const ssize_t x_row = x.shape(0);
   const ssize_t y_row = y.shape(0);
   const ssize_t x_col = x.ndim() == 1 ? 1 : x.shape(1);
   const ssize_t y_col = y.ndim() == 1 ? 1 : y.shape(1);
 
-  if (y.ndim() > 2) {
+  if (y.ndim() > 2 || y.ndim() < 1) {
     return ReturnState::INVALID_OUT_NDIM;
-  } else if (x.ndim() > 2) {
+  } else if (x.ndim() > 2 || x.ndim() < 1) {
     return ReturnState::INVALID_IN_NDIM;
   } else if (n_row < 0) {
     return ReturnState::INVALID_N_ROW;
@@ -136,7 +141,7 @@ ReturnState csr_matvec(const bool overwrite, const npy_intp n_col,
         using alpha_t = std::decay_t<decltype(alpha)>;
         using result_t = result_type_t<data_t, alpha_t, x_t>;
 
-        auto return_state = check_arrays(n_col, n_row, indptr, indices, data, x, y);
+        ReturnState return_state = check_arrays(n_col, n_row, x, y);
 
         if (return_state != ReturnState::SUCCESS) {
           return return_state;
@@ -171,7 +176,7 @@ ReturnState csr_matvec(const bool overwrite, const npy_intp n_col,
                                 y.strides(0), y.strides(1), y.mutable_data());
             } else {
               py::gil_scoped_release release;
-              csr_matvecs_noomp(overwrite, n_row, n_col, indptr.data(),
+              csr_matvecs_omp(overwrite, n_row, n_col, indptr.data(),
                                 indices.data(), data.data(), alpha,
                                 x.strides(0), x.strides(1), x.data(),
                                 y.strides(0), y.strides(1), y.mutable_data());
