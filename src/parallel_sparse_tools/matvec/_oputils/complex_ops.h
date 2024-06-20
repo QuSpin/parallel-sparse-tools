@@ -5,213 +5,189 @@
  *  Functions to handle arithmetic operations on NumPy complex values
  */
 
-#include <numpy/arrayobject.h>
+#include "result.h"
 
-template <class c_type, class npy_type>
-class complex_wrapper : public npy_type {
+template <class c_type> class complex {
 
 public:
-  /* Constructor */
-  complex_wrapper(const c_type r = c_type(0), const c_type i = c_type(0)) {
-    npy_type::real = r;
-    npy_type::imag = i;
+  c_type real;
+  c_type imag;
+
+  complex(const c_type r = c_type(0), const c_type i = c_type(0)) {
+    real = r;
+    imag = i;
   }
-  template <class _c_type, class _npy_type>
-  complex_wrapper(const complex_wrapper<_c_type, _npy_type> &B) {
-    npy_type::real = B.real;
-    npy_type::imag = B.imag;
+  template <class _c_type> complex(const complex<_c_type> &B) {
+    real = B.real;
+    imag = B.imag;
   }
   /* Conversion */
   operator bool() const {
-    if (npy_type::real == 0 && npy_type::imag == 0) {
+    if (real == 0 && imag == 0) {
       return false;
     } else {
       return true;
     }
   }
   /* Operators */
-  complex_wrapper operator-() const {
-    return complex_wrapper(-npy_type::real, -npy_type::imag);
+  complex operator-() const { return complex(-real, -imag); }
+  complex operator+(const complex &B) const {
+    return complex(real + B.real, imag + B.imag);
   }
-  complex_wrapper operator+(const complex_wrapper &B) const {
-    return complex_wrapper(npy_type::real + B.real, npy_type::imag + B.imag);
+  complex operator-(const complex &B) const {
+    return complex(real - B.real, imag - B.imag);
   }
-  complex_wrapper operator-(const complex_wrapper &B) const {
-    return complex_wrapper(npy_type::real - B.real, npy_type::imag - B.imag);
+  complex operator*(const complex &B) const {
+    return complex(real * B.real - imag * B.imag,
+                   real * B.imag + imag * B.real);
   }
-  complex_wrapper operator*(const complex_wrapper &B) const {
-    return complex_wrapper(npy_type::real * B.real - npy_type::imag * B.imag,
-                           npy_type::real * B.imag + npy_type::imag * B.real);
-  }
-  complex_wrapper operator/(const complex_wrapper &B) const {
-    complex_wrapper result;
+  complex operator/(const complex &B) const {
+    complex result;
     c_type denom = 1.0 / (B.real * B.real + B.imag * B.imag);
-    result.real = (npy_type::real * B.real + npy_type::imag * B.imag) * denom;
-    result.imag = (npy_type::imag * B.real - npy_type::real * B.imag) * denom;
+    result.real = (real * B.real + imag * B.imag) * denom;
+    result.imag = (imag * B.real - real * B.imag) * denom;
     return result;
   }
   /* in-place operators */
-  complex_wrapper &operator+=(const complex_wrapper &B) {
-    npy_type::real += B.real;
-    npy_type::imag += B.imag;
+  complex &operator+=(const complex &B) {
+    real += B.real;
+    imag += B.imag;
     return (*this);
   }
-  complex_wrapper &operator-=(const complex_wrapper &B) {
-    npy_type::real -= B.real;
-    npy_type::imag -= B.imag;
+  complex &operator-=(const complex &B) {
+    real -= B.real;
+    imag -= B.imag;
     return (*this);
   }
-  complex_wrapper &operator*=(const complex_wrapper &B) {
-    c_type temp = npy_type::real * B.real - npy_type::imag * B.imag;
-    npy_type::imag = npy_type::real * B.imag + npy_type::imag * B.real;
-    npy_type::real = temp;
+  complex &operator*=(const complex &B) {
+    c_type temp = real * B.real - imag * B.imag;
+    imag = real * B.imag + imag * B.real;
+    real = temp;
     return (*this);
   }
-  complex_wrapper &operator/=(const complex_wrapper &B) {
+  complex &operator/=(const complex &B) {
     c_type denom = 1.0 / (B.real * B.real + B.imag * B.imag);
-    c_type temp = (npy_type::real * B.real + npy_type::imag * B.imag) * denom;
-    npy_type::imag =
-        (npy_type::imag * B.real - npy_type::real * B.imag) * denom;
-    npy_type::real = temp;
+    c_type temp = (real * B.real + imag * B.imag) * denom;
+    imag = (imag * B.real - real * B.imag) * denom;
+    real = temp;
     return (*this);
   }
   /* Boolean operations */
-  bool operator==(const complex_wrapper &B) const {
-    return npy_type::real == B.real && npy_type::imag == B.imag;
+  bool operator==(const complex &B) const {
+    return real == B.real && imag == B.imag;
   }
-  bool operator!=(const complex_wrapper &B) const {
-    return npy_type::real != B.real || npy_type::imag != B.imag;
+  bool operator!=(const complex &B) const {
+    return real != B.real || imag != B.imag;
   }
-  bool operator<(const complex_wrapper &B) const {
-    return (npy_type::real == B.real ? npy_type::imag < B.imag
-                                     : npy_type::real < B.real);
+  bool operator<(const complex &B) const {
+    return (real == B.real ? imag < B.imag : real < B.real);
   }
-  bool operator>(const complex_wrapper &B) const {
-    return (npy_type::real == B.real ? npy_type::imag > B.imag
-                                     : npy_type::real > B.real);
+  bool operator>(const complex &B) const {
+    return (real == B.real ? imag > B.imag : real > B.real);
   }
-  bool operator<=(const complex_wrapper &B) const {
-    return (npy_type::real == B.real ? npy_type::imag <= B.imag
-                                     : npy_type::real <= B.real);
+  bool operator<=(const complex &B) const {
+    return (real == B.real ? imag <= B.imag : real <= B.real);
   }
-  bool operator>=(const complex_wrapper &B) const {
-    return (npy_type::real == B.real ? npy_type::imag >= B.imag
-                                     : npy_type::real >= B.real);
+  bool operator>=(const complex &B) const {
+    return (real == B.real ? imag >= B.imag : real >= B.real);
   }
   template <class T> bool operator==(const T &B) const {
-    return npy_type::real == B && npy_type::imag == T(0);
+    return real == B && imag == T(0);
   }
   template <class T> bool operator!=(const T &B) const {
-    return npy_type::real != B || npy_type::imag != T(0);
+    return real != B || imag != T(0);
   }
   template <class T> bool operator<(const T &B) const {
-    return (npy_type::real == B ? npy_type::imag < T(0) : npy_type::real < B);
+    return (real == B ? imag < T(0) : real < B);
   }
   template <class T> bool operator>(const T &B) const {
-    return (npy_type::real == B ? npy_type::imag > T(0) : npy_type::real > B);
+    return (real == B ? imag > T(0) : real > B);
   }
   template <class T> bool operator<=(const T &B) const {
-    return (npy_type::real == B ? npy_type::imag <= T(0) : npy_type::real <= B);
+    return (real == B ? imag <= T(0) : real <= B);
   }
   template <class T> bool operator>=(const T &B) const {
-    return (npy_type::real == B ? npy_type::imag >= T(0) : npy_type::real >= B);
+    return (real == B ? imag >= T(0) : real >= B);
   }
-  template <class _c_type, class _npy_type>
-  complex_wrapper &operator=(const complex_wrapper<_c_type, _npy_type> &B) {
-    npy_type::real = c_type(B.real);
-    npy_type::imag = c_type(B.imag);
+  template <class _c_type> complex &operator=(const complex<_c_type> &B) {
+    real = c_type(B.real);
+    imag = c_type(B.imag);
     return (*this);
   }
-  template <class _c_type> complex_wrapper &operator=(const _c_type &B) {
-    npy_type::real = c_type(B);
-    npy_type::imag = c_type(0);
+  template <class _c_type> complex &operator=(const _c_type &B) {
+    real = c_type(B);
+    imag = c_type(0);
     return (*this);
   }
 };
 
-typedef complex_wrapper<float, npy_cfloat> npy_cfloat_wrapper;
-typedef complex_wrapper<double, npy_cdouble> npy_cdouble_wrapper;
+typedef complex<float> cfloat;
+typedef complex<double> cdouble;
+typedef complex<long double> clongdouble;
 
-inline npy_cdouble_wrapper operator*(const npy_cdouble_wrapper &A,
-                                     const npy_cfloat_wrapper &B) {
-  return npy_cdouble_wrapper(A.real * B.real - A.imag * B.imag,
-                             A.real * B.imag + A.imag * B.real);
+template <class T, class U>
+complex<result_type_t<T, U>> operator+(const complex<T> &A,
+                                       const complex<U> &B) {
+  return complex<result_type_t<T, U>>(A.real + B.real, A.imag + B.imag);
 }
 
-inline npy_cdouble_wrapper operator*(const npy_cfloat_wrapper &A,
-                                     const npy_cdouble_wrapper &B) {
-  return npy_cdouble_wrapper(A.real * B.real - A.imag * B.imag,
-                             A.real * B.imag + A.imag * B.real);
+template <class T, class U>
+complex<result_type_t<T, U>> operator+(const complex<T> &A, const U &B) {
+  return complex<result_type_t<T, U>>(A.real + B, A.imag);
 }
 
-template <typename c_type>
-inline npy_cdouble_wrapper operator*(const npy_cdouble_wrapper &A,
-                                     const c_type &B) {
-  return npy_cdouble_wrapper(A.real * B, A.imag * B);
+template <class T, class U>
+complex<result_type_t<T, U>> operator+(const U &B, const complex<T> &A) {
+  return complex<result_type_t<T, U>>(A.real + B, A.imag);
 }
 
-template <typename c_type>
-inline npy_cdouble_wrapper operator*(const c_type &B,
-                                     const npy_cdouble_wrapper &A) {
-  return npy_cdouble_wrapper(A.real * B, A.imag * B);
+template <class T, class U>
+complex<result_type_t<T, U>> operator-(const complex<T> &A,
+                                       const complex<U> &B) {
+  return complex<result_type_t<T, U>>(A.real - B.real, A.imag - B.imag);
 }
 
-template <typename c_type>
-inline npy_cfloat_wrapper operator*(const npy_cfloat_wrapper &A,
-                                    const c_type &B) {
-  return npy_cfloat_wrapper(A.real * B, A.imag * B);
+template <class T, class U>
+complex<result_type_t<T, U>> operator-(const complex<T> &A, const U &B) {
+  return complex<result_type_t<T, U>>(A.real - B, A.imag);
 }
 
-template <typename c_type>
-inline npy_cfloat_wrapper operator*(const c_type &B,
-                                    const npy_cfloat_wrapper &A) {
-  return npy_cfloat_wrapper(A.real * B, A.imag * B);
+template <class T, class U>
+complex<result_type_t<T, U>> operator-(const U &B, const complex<T> &A) {
+  return complex<result_type_t<T, U>>(B - A.real, -A.imag);
 }
 
-template <typename c_type>
-inline npy_cdouble_wrapper operator/(const npy_cdouble_wrapper &A,
-                                     const c_type &B) {
-  return npy_cdouble_wrapper(A.real / B, A.imag / B);
+template <class T, class U>
+complex<result_type_t<T, U>> operator*(const complex<T> &A,
+                                       const complex<U> &B) {
+  return complex<result_type_t<T, U>>(A.real * B.real - A.imag * B.imag,
+                                      A.real * B.imag + A.imag * B.real);
 }
 
-template <typename c_type>
-inline npy_cfloat_wrapper operator/(const npy_cfloat_wrapper &A,
-                                    const c_type &B) {
-  return npy_cfloat_wrapper(A.real / B, A.imag / B);
+template <class T, class U>
+complex<result_type_t<T, U>> operator*(const complex<T> &A, const U &B) {
+  return complex<result_type_t<T, U>>(A.real * B, A.imag * B);
 }
 
-inline npy_cdouble_wrapper operator+(const npy_cdouble_wrapper &A,
-                                     const npy_cfloat_wrapper &B) {
-  return npy_cdouble_wrapper(A.real + B.real, A.real + B.imag);
+template <class T, class U>
+complex<result_type_t<T, U>> operator*(const U &B, const complex<T> &A) {
+  return complex<result_type_t<T, U>>(A.real * B, A.imag * B);
 }
 
-inline npy_cdouble_wrapper operator+(const npy_cfloat_wrapper &A,
-                                     const npy_cdouble_wrapper &B) {
-  return npy_cdouble_wrapper(A.real + B.real, A.real + B.imag);
+template <class T, class U>
+complex<result_type_t<T, U>> operator/(const complex<T> &A,
+                                       const complex<U> &B) {
+  return A * complex(B.real, -B.imag) / (B.real * B.real + B.imag * B.imag);
 }
 
-template <typename c_type>
-inline npy_cdouble_wrapper operator+(const npy_cdouble_wrapper &A,
-                                     const c_type &B) {
-  return npy_cdouble_wrapper(A.real + B, A.imag);
+template <class T, class U>
+complex<result_type_t<T, U>> operator/(const complex<T> &A, const U &B) {
+  return complex<result_type_t<T, U>>(A.real / B, A.imag / B);
 }
 
-template <typename c_type>
-inline npy_cdouble_wrapper operator+(const c_type &B,
-                                     const npy_cdouble_wrapper &A) {
-  return npy_cdouble_wrapper(A.real + B, A.imag);
-}
-
-template <typename c_type>
-inline npy_cfloat_wrapper operator+(const npy_cfloat_wrapper &A,
-                                    const c_type &B) {
-  return npy_cfloat_wrapper(A.real + B, A.imag);
-}
-
-template <typename c_type>
-inline npy_cfloat_wrapper operator+(const c_type &B,
-                                    const npy_cfloat_wrapper &A) {
-  return npy_cfloat_wrapper(A.real + B, A.imag);
+template <class T, class U>
+complex<result_type_t<T, U>> operator/(const U &B, const complex<T> &A) {
+  return B * complex(A.real, -A.imag) / (A.real * A.real + A.imag * A.imag);
 }
 
 #endif

@@ -5,18 +5,15 @@
 #include "utils.h"
 #include <iomanip>
 #include <iostream>
+#include <numpy/arrayobject.h>
 
 void write(const float &a) { std::cout << a; }
 
 void write(const double &a) { std::cout << a; }
 
-void write(const npy_cfloat_wrapper &a) {
-  std::cout << a.real << std::setw(20) << a.imag;
-}
+void write(const cfloat &a) { std::cout << a.real << std::setw(20) << a.imag; }
 
-void write(const npy_cdouble_wrapper &a) {
-  std::cout << a.real << std::setw(20) << a.imag;
-}
+void write(const cdouble &a) { std::cout << a.real << std::setw(20) << a.imag; }
 
 template <typename I, typename T1, typename T2, typename T3>
 void csr_matvec_noomp_contig(const bool overwrite_y, const I n_row,

@@ -20,10 +20,10 @@ def extra_compile_args() -> List[str]:
     elif sys.platform in ["darwin"]:
         extra_compile_args = [
             "-mmacosx-version-min=10.15",
-            "-DLLVM_ENABLE_PROJECTS",
-            "-Xpreprocessor",
-            "-fopenmp-version=50"
-            "-fopenmp",
+            # "-DLLVM_ENABLE_PROJECTS",
+            # "-Xpreprocessor",
+            # "-fopenmp-version=50"
+            # "-fopenmp",
         ]
     else:
         extra_compile_args = ["-fopenmp"]

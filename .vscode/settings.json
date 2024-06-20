@@ -59,6 +59,12 @@
         "set": "cpp",
         "typeindex": "cpp",
         "unordered_set": "cpp",
-        "valarray": "cpp"
+        "valarray": "cpp",
+        "npy_interrupt.h": "c",
+        "ndarrayobject.h": "c",
+        "ndarraytypes.h": "c",
+        "npy_cpu.h": "c",
+        "npy_endian.h": "c",
+        "npy_common.h": "c"
     }
 }
