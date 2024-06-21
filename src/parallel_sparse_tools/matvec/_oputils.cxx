@@ -17,16 +17,10 @@ using array_variants = std::variant<
     py::array_t<float>, py::array_t<double>, py::array_t<long double>,
     py::array_t<cfloat>, py::array_t<cdouble>, py::array_t<clongdouble>>;
 
-using index_variants = std::variant<py::array_t<int32_t>, py::array_t<int64_t>>;
 
-array_variants get_array(py::array &arr, const std::string &name,
-                         const int ndim = -1) {
-  if (ndim >= 0 && arr.ndim() != ndim) {
-    throw std::invalid_argument("Array " + name + " must be " +
-                                std::to_string(ndim) + "-dimensional");
-  }
-  const int type_num = arr.dtype().num();
-  switch (type_num) {
+array_variants get_array(py::array &arr) {
+  const int num = arr.dtype().num();
+  switch (num) {
   case py::detail::npy_api::NPY_BOOL_:
     return py::array_t<bool>(arr);
   case py::detail::npy_api::NPY_INT8_:
@@ -58,22 +52,7 @@ array_variants get_array(py::array &arr, const std::string &name,
   case py::detail::npy_api::NPY_CLONGDOUBLE_:
     return py::array_t<clongdouble>(arr);
   default:
-    throw std::invalid_argument("Invalid data type");
-  }
-}
-
-index_variants get_index(py::array &arr, const std::string &name) {
-  if (arr.ndim() != 1) {
-    throw std::invalid_argument(name + " array must be 1-dimensional");
-  }
-  const int type_num = arr.dtype().num();
-  switch (type_num) {
-  case py::detail::npy_api::NPY_INT32_:
-    return py::array_t<int32_t>(arr);
-  case py::detail::npy_api::NPY_INT64_:
-    return py::array_t<int64_t>(arr);
-  default:
-    throw std::invalid_argument("Invalid data type");
+    throw std::invalid_argument("Invalid data type "+std::to_string(num));
   }
 }
 
@@ -84,15 +63,15 @@ enum class ReturnState {
   MISMATCH_IN_OUT_TYPES = 3,
   MISMATCH_INDEX_TYPES = 4,
   INVALID_OUT_TYPE = 5,
-  MISMATCH_IN_DIM = 6,
-  INVALID_IN_NDIM = 7,
-  MISMATCH_OUT_DIM = 8,
-  INVALID_OUT_NDIM = 9,
-  DIM_MISMATCH_IN_OUT = 10
+  INVALID_INDEX_TYPE = 6,
+  MISMATCH_IN_DIM = 7,
+  INVALID_IN_NDIM = 8,
+  MISMATCH_OUT_DIM = 9,
+  INVALID_OUT_NDIM = 10,
+  DIM_MISMATCH_IN_OUT = 11
 };
 
-template <typename X, typename Y>
-ReturnState check_arrays(const npy_intp n_col, const npy_intp n_row, X x, Y y) {
+ReturnState check_arrays(const npy_intp n_col, const npy_intp n_row, py::array_t<X> x, py: y) {
   const ssize_t x_row = x.shape(0);
   const ssize_t y_row = y.shape(0);
   const ssize_t x_col = x.ndim() == 1 ? 1 : x.shape(1);
@@ -123,9 +102,9 @@ ReturnState csr_matvec(const bool overwrite, const npy_intp n_col,
                        py::array py_indptr, py::array py_indices,
                        py::array py_data, py::array py_x, py::array py_y) {
 
-  index_variants indptr = get_array(py_indptr, "indptr");
-  index_variants indices = get_array(py_indices, "indices");
-  array_variants data = get_array(py_data, "data", 1);
+  array_variants indptr = get_array(py_indptr, "indptr");
+  array_variants indices = get_array(py_indices, "indices");
+  array_variants data = get_array(py_data, "data");
   array_variants x = get_array(py_x, "x");
   array_variants y = get_array(py_y, "y");
 
@@ -141,19 +120,22 @@ ReturnState csr_matvec(const bool overwrite, const npy_intp n_col,
         using alpha_t = std::decay_t<decltype(alpha)>;
         using result_t = result_type_t<data_t, alpha_t, x_t>;
 
-        ReturnState return_state = check_arrays(n_col, n_row, x, y);
-
-        if (return_state != ReturnState::SUCCESS) {
-          return return_state;
-        }
-
         if constexpr (!std::is_same_v<x_t, y_t>) {
           return ReturnState::MISMATCH_IN_OUT_TYPES;
         } else if constexpr (!std::is_same_v<x_t, result_t>) {
           return ReturnState::INVALID_OUT_TYPE;
         } else if constexpr (!std::is_same_v<indptr_t, indices_t>) {
           return ReturnState::MISMATCH_INDEX_TYPES;
+        else if (!std::is_same_v<indices_t, int32_t> || !std::is_same_v<indices_t, int64_t>){
+          return ReturnState::INVALID_INDEX_TYPE;
+        }
         } else {
+          ReturnState return_state = check_arrays(n_col, n_row, x, y, indices, indptr, data);
+
+          if (return_state != ReturnState::SUCCESS) {
+            return return_state;
+          }
+
           ssize_t x_col = x.ndim() == 1 ? 1 : x.shape(1);
 
           if (x_col == 1) {
