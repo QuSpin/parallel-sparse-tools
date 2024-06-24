@@ -1,7 +1,7 @@
 #ifndef __CSR_H
 #define __CSR_H
 
-#include "complein_ops.h"
+#include "complex_ops.h"
 #include "utils.h"
 #include <iomanip>
 #include <iostream>
@@ -84,9 +84,9 @@ void csr_matvecs_noomp_strided(const bool overwrite_out, const I n_row,
   if (out_stride_col < out_stride_row) {
     for (I k = 0; k < n_row; k++) {
       for (I jj = indptr[k]; jj < indptr[k + 1]; jj++) {
-        const T3 data = a * data[jj];
+        const T3 d = a * data[jj];
         const T3 *in_row = in + in_stride_row * indices[jj];
-        datapy_strided(n_vecs, data, in_stride_col, in_row, out_stride_col, out);
+        axpy_strided(n_vecs, d, in_stride_col, in_row, out_stride_col, out);
       }
       out += out_stride_row;
     }
