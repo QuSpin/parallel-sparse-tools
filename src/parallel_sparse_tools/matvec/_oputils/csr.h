@@ -1,7 +1,7 @@
 #ifndef __CSR_H
 #define __CSR_H
 
-#include "complex_ops.h"
+#include "complein_ops.h"
 #include "utils.h"
 #include <iomanip>
 #include <iostream>
@@ -15,91 +15,91 @@ void write(const cfloat &a) { std::cout << a.real << std::setw(20) << a.imag; }
 
 void write(const cdouble &a) { std::cout << a.real << std::setw(20) << a.imag; }
 
-template <typename I, typename T1, typename T2, typename T3>
-void csr_matvec_noomp_contig(const bool overwrite_y, const I n_row,
-                             const I Ap[], const I Aj[], const T1 Ax[],
-                             const T2 a, const T3 x[], T3 y[]) {
+template <class I, class T1, class T2, class T3>
+void csr_matvec_noomp_contig(const bool overwrite_out, const I n_row,
+                             const I indptr[], const I indices[], const T1 data[],
+                             const T2 a, const T3 in[], T3 out[]) {
   // const T3 a_cast = T3(a);
-  if (overwrite_y) {
+  if (overwrite_out) {
     for (I k = 0; k < n_row; k++) {
       T3 sum = 0;
-      for (I jj = Ap[k]; jj < Ap[k + 1]; jj++) {
-        sum += Ax[jj] * x[Aj[jj]];
+      for (I jj = indptr[k]; jj < indptr[k + 1]; jj++) {
+        sum += data[jj] * in[indices[jj]];
       }
-      y[k] = a * sum;
+      out[k] = a * sum;
     }
   } else {
     for (I k = 0; k < n_row; k++) {
       T3 sum = 0;
-      for (I jj = Ap[k]; jj < Ap[k + 1]; jj++) {
-        sum += Ax[jj] * x[Aj[jj]];
+      for (I jj = indptr[k]; jj < indptr[k + 1]; jj++) {
+        sum += data[jj] * in[indices[jj]];
       }
 
-      y[k] += a * sum;
+      out[k] += a * sum;
     }
   }
 }
 
-template <typename I, typename T1, typename T2, typename T3>
-void csr_matvec_noomp_strided(const bool overwrite_y, const I n_row,
-                              const I Ap[], const I Aj[], const T1 Ax[],
-                              const T2 a, const npy_intp x_stride, const T3 x[],
-                              const npy_intp y_stride, T3 y[]) {
+template <class I, class T1, class T2, class T3>
+void csr_matvec_noomp_strided(const bool overwrite_out, const I n_row,
+                              const I indptr[], const I indices[], const T1 data[],
+                              const T2 a, const npy_intp in_stride, const T3 in[],
+                              const npy_intp out_stride, T3 out[]) {
   // const T3 a_cast = T3(a);
-  if (overwrite_y) {
+  if (overwrite_out) {
     for (I k = 0; k < n_row; k++) {
       T3 sum = 0;
-      for (I jj = Ap[k]; jj < Ap[k + 1]; jj++) {
-        sum += Ax[jj] * x[Aj[jj] * x_stride];
+      for (I jj = indptr[k]; jj < indptr[k + 1]; jj++) {
+        sum += data[jj] * in[indices[jj] * in_stride];
       }
-      y[k * y_stride] = a * sum;
+      out[k * out_stride] = a * sum;
     }
   } else {
     for (I k = 0; k < n_row; k++) {
       T3 sum = 0;
-      for (I jj = Ap[k]; jj < Ap[k + 1]; jj++) {
-        sum += Ax[jj] * x[Aj[jj] * x_stride];
+      for (I jj = indptr[k]; jj < indptr[k + 1]; jj++) {
+        sum += data[jj] * in[indices[jj] * in_stride];
       }
-      y[k * y_stride] += a * sum;
+      out[k * out_stride] += a * sum;
     }
   }
 }
 
-template <typename I, typename T1, typename T2, typename T3>
-void csr_matvecs_noomp_strided(const bool overwrite_y, const I n_row,
-                               const npy_intp n_vecs, const I Ap[],
-                               const I Aj[], const T1 Ax[], const T2 a,
-                               const npy_intp x_stride_row,
-                               const npy_intp x_stride_col, const T3 x[],
-                               const npy_intp y_stride_row,
-                               const npy_intp y_stride_col, T3 y[]) {
-  if (overwrite_y) {
+template <class I, class T1, class T2, class T3>
+void csr_matvecs_noomp_strided(const bool overwrite_out, const I n_row,
+                               const npy_intp n_vecs, const I indptr[],
+                               const I indices[], const T1 data[], const T2 a,
+                               const npy_intp in_stride_row,
+                               const npy_intp in_stride_col, const T3 in[],
+                               const npy_intp out_stride_row,
+                               const npy_intp out_stride_col, T3 out[]) {
+  if (overwrite_out) {
     for (npy_intp i = 0; i < n_row; i++) {
       for (npy_intp j = 0; j < n_vecs; j++) {
-        y[i * y_stride_row + j * y_stride_col] = 0;
+        out[i * out_stride_row + j * out_stride_col] = 0;
       }
     }
   }
 
-  if (y_stride_col < y_stride_row) {
+  if (out_stride_col < out_stride_row) {
     for (I k = 0; k < n_row; k++) {
-      for (I jj = Ap[k]; jj < Ap[k + 1]; jj++) {
-        const T3 ax = a * Ax[jj];
-        const T3 *x_row = x + x_stride_row * Aj[jj];
-        axpy_strided(n_vecs, ax, x_stride_col, x_row, y_stride_col, y);
+      for (I jj = indptr[k]; jj < indptr[k + 1]; jj++) {
+        const T3 data = a * data[jj];
+        const T3 *in_row = in + in_stride_row * indices[jj];
+        datapy_strided(n_vecs, data, in_stride_col, in_row, out_stride_col, out);
       }
-      y += y_stride_row;
+      out += out_stride_row;
     }
   } else {
     for (I m = 0; m < n_vecs; m++) {
       for (I k = 0; k < n_row; k++) {
-        for (I jj = Ap[k]; jj < Ap[k + 1]; jj++) {
-          const npy_intp ii = x_stride_row * Aj[jj];
-          (*y) += (a * Ax[jj]) * x[ii];
+        for (I jj = indptr[k]; jj < indptr[k + 1]; jj++) {
+          const npy_intp ii = in_stride_row * indices[jj];
+          (*out) += (a * data[jj]) * in[ii];
         }
-        y += y_stride_row;
+        out += out_stride_row;
       }
-      x += x_stride_col;
+      in += in_stride_col;
     }
   }
 }
@@ -108,27 +108,27 @@ void csr_matvecs_noomp_strided(const bool overwrite_y, const I n_row,
 #include "csrmv_merge.h"
 #include "openmp.h"
 
-template <typename I, typename T1, typename T2, typename T3>
-inline void csr_matvec_omp_contig(const bool overwrite_y, const I n_row,
-                                  const I Ap[], const I Aj[], const T1 Ax[],
-                                  const T2 a, const T3 x[], T3 y[]) {
-  const int nthread = omp_get_max_threads();
+template <class I, class T1, class T2, class T3>
+inline void csr_matvec_omp_contig(const bool overwrite_out, const I n_row,
+                                  const I indptr[], const I indices[], const T1 data[],
+                                  const T2 a, const T3 in[], T3 out[]) {
+  const int nthread = omp_get_mdata_threads();
   std::vector<I> rco_vec(nthread);
   std::vector<T3> vco_vec(nthread);
   I *rco = &rco_vec[0];
   T3 *vco = &vco_vec[0];
-#pragma omp parallel shared(Ap, Aj, Ax, x, rco, vco, y)                        \
-    firstprivate(overwrite_y, n_row)
-  { csrmv_merge(overwrite_y, n_row, Ap, Aj, Ax, a, x, rco, vco, y); }
+#pragma omp parallel shared(indptr, indices, data, in, rco, vco, y)                        \
+    firstprivate(overwrite_out, n_row)
+  { csrmv_merge(overwrite_out, n_row, indptr, indices, data, a, in, rco, vco, out); }
 }
 
-template <typename I, typename T1, typename T2, typename T3>
-inline void csr_matvec_omp_strided(const bool overwrite_y, const I n_row,
-                                   const I Ap[], const I Aj[], const T1 Ax[],
-                                   const T2 a, const npy_intp x_stride,
-                                   const T3 x[], const npy_intp y_stride,
-                                   T3 y[]) {
-  const int nthread = omp_get_max_threads();
+template <class I, class T1, class T2, class T3>
+inline void csr_matvec_omp_strided(const bool overwrite_out, const I n_row,
+                                   const I indptr[], const I indices[], const T1 data[],
+                                   const T2 a, const npy_intp in_stride,
+                                   const T3 in[], const npy_intp out_stride,
+                                   T3 out[]) {
+  const int nthread = omp_get_mdata_threads();
 
   std::vector<I> rco_vec(nthread);
   std::vector<T3> vco_vec(nthread);
@@ -136,197 +136,197 @@ inline void csr_matvec_omp_strided(const bool overwrite_y, const I n_row,
   T3 *vco = &vco_vec[0];
 #pragma omp parallel
   {
-    csrmv_merge_strided(overwrite_y, n_row, Ap, Aj, Ax, a, x_stride, x, rco,
-                        vco, y_stride, y);
+    csrmv_merge_strided(overwrite_out, n_row, indptr, indices, data, a, in_stride, in, rco,
+                        vco, out_stride, out);
   }
 }
 
-template <typename I, typename T1, typename T2, typename T3>
-inline void csr_matvecs_omp_strided(const bool overwrite_y, const I n_row,
-                                    const npy_intp n_vecs, const I Ap[],
-                                    const I Aj[], const T1 Ax[], const T2 a,
-                                    const npy_intp x_stride_row,
-                                    const npy_intp x_stride_col, const T3 x[],
-                                    const npy_intp y_stride_row,
-                                    const npy_intp y_stride_col, T3 y[]) {
-  csr_matvecs_noomp_strided(overwrite_y, n_row, n_vecs, Ap, Aj, Ax, a,
-                            x_stride_row, x_stride_col, x, y_stride_row,
-                            y_stride_col, y);
+template <class I, class T1, class T2, class T3>
+inline void csr_matvecs_omp_strided(const bool overwrite_out, const I n_row,
+                                    const npy_intp n_vecs, const I indptr[],
+                                    const I indices[], const T1 data[], const T2 a,
+                                    const npy_intp in_stride_row,
+                                    const npy_intp in_stride_col, const T3 in[],
+                                    const npy_intp out_stride_row,
+                                    const npy_intp out_stride_col, T3 out[]) {
+  csr_matvecs_noomp_strided(overwrite_out, n_row, n_vecs, indptr, indices, data, a,
+                            in_stride_row, in_stride_col, in, out_stride_row,
+                            out_stride_col, out);
 }
 
 #else
 
-template <typename I, typename T1, typename T2, typename T3>
-inline void csr_matvec_omp_contig(const bool overwrite_y, const I n_row,
-                                  const I Ap[], const I Aj[], const T1 Ax[],
-                                  const T2 a, const T3 x[], T3 y[]) {
-  csr_matvec_noomp_contig(overwrite_y, n_row, Ap, Aj, Ax, a, x, y);
+template <class I, class T1, class T2, class T3>
+inline void csr_matvec_omp_contig(const bool overwrite_out, const I n_row,
+                                  const I indptr[], const I indices[], const T1 data[],
+                                  const T2 a, const T3 in[], T3 out[]) {
+  csr_matvec_noomp_contig(overwrite_out, n_row, indptr, indices, data, a, in, out);
 }
 
-template <typename I, typename T1, typename T2, typename T3>
-inline void csr_matvec_omp_strided(const bool overwrite_y, const I n_row,
-                                   const I Ap[], const I Aj[], const T1 Ax[],
-                                   const T2 a, const npy_intp x_stride,
-                                   const T3 x[], const npy_intp y_stride,
-                                   T3 y[]) {
-  csr_matvec_noomp_strided(overwrite_y, n_row, Ap, Aj, Ax, a, x_stride, x,
-                           y_stride, y);
+template <class I, class T1, class T2, class T3>
+inline void csr_matvec_omp_strided(const bool overwrite_out, const I n_row,
+                                   const I indptr[], const I indices[], const T1 data[],
+                                   const T2 a, const npy_intp in_stride,
+                                   const T3 in[], const npy_intp out_stride,
+                                   T3 out[]) {
+  csr_matvec_noomp_strided(overwrite_out, n_row, indptr, indices, data, a, in_stride, in,
+                           out_stride, out);
 }
 
-template <typename I, typename T1, typename T2, typename T3>
-inline void csr_matvecs_omp_strided(const bool overwrite_y, const I n_row,
-                                    const npy_intp n_vecs, const I Ap[],
-                                    const I Aj[], const T1 Ax[], const T2 a,
-                                    const npy_intp x_stride_row,
-                                    const npy_intp x_stride_col, const T3 x[],
-                                    const npy_intp y_stride_row,
-                                    const npy_intp y_stride_col, T3 y[]) {
-  csr_matvecs_noomp_strided(overwrite_y, n_row, n_vecs, Ap, Aj, Ax, a,
-                            x_stride_row, x_stride_col, x, y_stride_row,
-                            y_stride_col, y);
+template <class I, class T1, class T2, class T3>
+inline void csr_matvecs_omp_strided(const bool overwrite_out, const I n_row,
+                                    const npy_intp n_vecs, const I indptr[],
+                                    const I indices[], const T1 data[], const T2 a,
+                                    const npy_intp in_stride_row,
+                                    const npy_intp in_stride_col, const T3 in[],
+                                    const npy_intp out_stride_row,
+                                    const npy_intp out_stride_col, T3 out[]) {
+  csr_matvecs_noomp_strided(overwrite_out, n_row, n_vecs, indptr, indices, data, a,
+                            in_stride_row, in_stride_col, in, out_stride_row,
+                            out_stride_col, out);
 }
 
 #endif
 
 // when openmp is not being used omp and noomp versions are identical
 
-template <typename I, typename T1, typename T2, typename T3>
-void csr_matvec_noomp(const bool overwrite_y, const I n_row, const I n_col,
-                      const I Ap[], const I Aj[], const T1 Ax[], const T2 a,
-                      const npy_intp x_stride_byte, const T3 x[],
-                      const npy_intp y_stride_byte, T3 y[]) {
-  const npy_intp y_stride = y_stride_byte / sizeof(T3);
-  const npy_intp x_stride = x_stride_byte / sizeof(T3);
+template <class I, class T1, class T2, class T3>
+void csr_matvec_noomp(const bool overwrite_out, const I n_row, const I n_col,
+                      const I indptr[], const I indices[], const T1 data[], const T2 a,
+                      const npy_intp in_stride_byte, const T3 in[],
+                      const npy_intp y_stride_byte, T3 out[]) {
+  const npy_intp out_stride = y_stride_byte / sizeof(T3);
+  const npy_intp in_stride = in_stride_byte / sizeof(T3);
 
-  if (y_stride == 1) {
-    if (x_stride == 1) {
-      csr_matvec_noomp_contig(overwrite_y, n_row, Ap, Aj, Ax, a, x, y);
+  if (out_stride == 1) {
+    if (in_stride == 1) {
+      csr_matvec_noomp_contig(overwrite_out, n_row, indptr, indices, data, a, in, out);
     } else {
-      csr_matvec_noomp_strided(overwrite_y, n_row, Ap, Aj, Ax, a, x_stride, x,
-                               1, y);
+      csr_matvec_noomp_strided(overwrite_out, n_row, indptr, indices, data, a, in_stride, in,
+                               1, out);
     }
   } else {
-    if (x_stride == 1) {
-      csr_matvec_noomp_strided(overwrite_y, n_row, Ap, Aj, Ax, a, 1, x,
-                               y_stride, y);
+    if (in_stride == 1) {
+      csr_matvec_noomp_strided(overwrite_out, n_row, indptr, indices, data, a, 1, in,
+                               out_stride, out);
     } else {
-      csr_matvec_noomp_strided(overwrite_y, n_row, Ap, Aj, Ax, a, x_stride, x,
-                               y_stride, y);
+      csr_matvec_noomp_strided(overwrite_out, n_row, indptr, indices, data, a, in_stride, in,
+                               out_stride, out);
     }
   }
 }
 
-template <typename I, typename T1, typename T2, typename T3>
-void csr_matvec_omp(const bool overwrite_y, const I n_row, const I n_col,
-                    const I Ap[], const I Aj[], const T1 Ax[], const T2 a,
-                    const npy_intp x_stride_byte, const T3 x[],
-                    const npy_intp y_stride_byte, T3 y[]) {
-  const npy_intp y_stride = y_stride_byte / sizeof(T3);
-  const npy_intp x_stride = x_stride_byte / sizeof(T3);
+template <class I, class T1, class T2, class T3>
+void csr_matvec_omp(const bool overwrite_out, const I n_row, const I n_col,
+                    const I indptr[], const I indices[], const T1 data[], const T2 a,
+                    const npy_intp in_stride_byte, const T3 in[],
+                    const npy_intp y_stride_byte, T3 out[]) {
+  const npy_intp out_stride = y_stride_byte / sizeof(T3);
+  const npy_intp in_stride = in_stride_byte / sizeof(T3);
 
-  if (y_stride == 1) {
-    if (x_stride == 1) {
-      csr_matvec_omp_contig(overwrite_y, n_row, Ap, Aj, Ax, a, x, y);
+  if (out_stride == 1) {
+    if (in_stride == 1) {
+      csr_matvec_omp_contig(overwrite_out, n_row, indptr, indices, data, a, in, out);
     } else {
-      csr_matvec_omp_strided(overwrite_y, n_row, Ap, Aj, Ax, a, x_stride, x, 1,
-                             y);
+      csr_matvec_omp_strided(overwrite_out, n_row, indptr, indices, data, a, in_stride, in, 1,
+                             out);
     }
   } else {
-    if (x_stride == 1) {
-      csr_matvec_omp_strided(overwrite_y, n_row, Ap, Aj, Ax, a, 1, x, y_stride,
-                             y);
+    if (in_stride == 1) {
+      csr_matvec_omp_strided(overwrite_out, n_row, indptr, indices, data, a, 1, in, out_stride,
+                             out);
     } else {
-      csr_matvec_omp_strided(overwrite_y, n_row, Ap, Aj, Ax, a, x_stride, x,
-                             y_stride, y);
+      csr_matvec_omp_strided(overwrite_out, n_row, indptr, indices, data, a, in_stride, in,
+                             out_stride, out);
     }
   }
 }
 
-template <typename I, typename T1, typename T2, typename T3>
-inline void csr_matvecs_noomp(const bool overwrite_y, const I n_row,
+template <class I, class T1, class T2, class T3>
+inline void csr_matvecs_noomp(const bool overwrite_out, const I n_row,
                               const I n_col, const npy_intp n_vecs,
-                              const I Ap[], const I Aj[], const T1 Ax[],
-                              const T2 a, const npy_intp x_stride_row_byte,
-                              const npy_intp x_stride_col_byte, const T3 x[],
+                              const I indptr[], const I indices[], const T1 data[],
+                              const T2 a, const npy_intp in_stride_row_byte,
+                              const npy_intp in_stride_col_byte, const T3 in[],
                               const npy_intp y_stride_row_byte,
-                              const npy_intp y_stride_col_byte, T3 y[]) {
-  const npy_intp y_stride_row = y_stride_row_byte / sizeof(T3);
-  const npy_intp y_stride_col = y_stride_col_byte / sizeof(T3);
-  const npy_intp x_stride_row = x_stride_row_byte / sizeof(T3);
-  const npy_intp x_stride_col = x_stride_col_byte / sizeof(T3);
+                              const npy_intp y_stride_col_byte, T3 out[]) {
+  const npy_intp out_stride_row = y_stride_row_byte / sizeof(T3);
+  const npy_intp out_stride_col = y_stride_col_byte / sizeof(T3);
+  const npy_intp in_stride_row = in_stride_row_byte / sizeof(T3);
+  const npy_intp in_stride_col = in_stride_col_byte / sizeof(T3);
 
-  if (y_stride_col == 1) {
-    if (x_stride_col == 1) {
-      csr_matvecs_noomp_strided(overwrite_y, n_row, n_vecs, Ap, Aj, Ax, a,
-                                x_stride_row, 1, x, y_stride_row, 1, y);
-    } else if (x_stride_row == 1) {
-      csr_matvecs_noomp_strided(overwrite_y, n_row, n_vecs, Ap, Aj, Ax, a, 1,
-                                x_stride_col, x, y_stride_row, 1, y);
+  if (out_stride_col == 1) {
+    if (in_stride_col == 1) {
+      csr_matvecs_noomp_strided(overwrite_out, n_row, n_vecs, indptr, indices, data, a,
+                                in_stride_row, 1, in, out_stride_row, 1, out);
+    } else if (in_stride_row == 1) {
+      csr_matvecs_noomp_strided(overwrite_out, n_row, n_vecs, indptr, indices, data, a, 1,
+                                in_stride_col, in, out_stride_row, 1, out);
     } else {
-      csr_matvecs_noomp_strided(overwrite_y, n_row, n_vecs, Ap, Aj, Ax, a,
-                                x_stride_row, x_stride_col, x, y_stride_row, 1,
-                                y);
+      csr_matvecs_noomp_strided(overwrite_out, n_row, n_vecs, indptr, indices, data, a,
+                                in_stride_row, in_stride_col, in, out_stride_row, 1,
+                                out);
     }
-  } else if (y_stride_row == 1) {
-    if (x_stride_col == 1) {
-      csr_matvecs_noomp_strided(overwrite_y, n_row, n_vecs, Ap, Aj, Ax, a,
-                                x_stride_row, 1, x, 1, y_stride_col, y);
-    } else if (x_stride_row == 1) {
-      csr_matvecs_noomp_strided(overwrite_y, n_row, n_vecs, Ap, Aj, Ax, a, 1,
-                                x_stride_col, x, 1, y_stride_col, y);
+  } else if (out_stride_row == 1) {
+    if (in_stride_col == 1) {
+      csr_matvecs_noomp_strided(overwrite_out, n_row, n_vecs, indptr, indices, data, a,
+                                in_stride_row, 1, in, 1, out_stride_col, out);
+    } else if (in_stride_row == 1) {
+      csr_matvecs_noomp_strided(overwrite_out, n_row, n_vecs, indptr, indices, data, a, 1,
+                                in_stride_col, in, 1, out_stride_col, out);
     } else {
-      csr_matvecs_noomp_strided(overwrite_y, n_row, n_vecs, Ap, Aj, Ax, a,
-                                x_stride_row, x_stride_col, x, 1, y_stride_col,
-                                y);
+      csr_matvecs_noomp_strided(overwrite_out, n_row, n_vecs, indptr, indices, data, a,
+                                in_stride_row, in_stride_col, in, 1, out_stride_col,
+                                out);
     }
   } else {
-    csr_matvecs_noomp_strided(overwrite_y, n_row, n_vecs, Ap, Aj, Ax, a,
-                              x_stride_row, x_stride_col, x, y_stride_row,
-                              y_stride_col, y);
+    csr_matvecs_noomp_strided(overwrite_out, n_row, n_vecs, indptr, indices, data, a,
+                              in_stride_row, in_stride_col, in, out_stride_row,
+                              out_stride_col, out);
   }
 }
 
-template <typename I, typename T1, typename T2, typename T3>
-inline void csr_matvecs_omp(const bool overwrite_y, const I n_row,
-                            const I n_col, const npy_intp n_vecs, const I Ap[],
-                            const I Aj[], const T1 Ax[], const T2 a,
-                            const npy_intp x_stride_row_byte,
-                            const npy_intp x_stride_col_byte, const T3 x[],
+template <class I, class T1, class T2, class T3>
+inline void csr_matvecs_omp(const bool overwrite_out, const I n_row,
+                            const I n_col, const npy_intp n_vecs, const I indptr[],
+                            const I indices[], const T1 data[], const T2 a,
+                            const npy_intp in_stride_row_byte,
+                            const npy_intp in_stride_col_byte, const T3 in[],
                             const npy_intp y_stride_row_byte,
-                            const npy_intp y_stride_col_byte, T3 y[]) {
-  const npy_intp y_stride_row = y_stride_row_byte / sizeof(T3);
-  const npy_intp y_stride_col = y_stride_col_byte / sizeof(T3);
-  const npy_intp x_stride_row = x_stride_row_byte / sizeof(T3);
-  const npy_intp x_stride_col = x_stride_col_byte / sizeof(T3);
+                            const npy_intp y_stride_col_byte, T3 out[]) {
+  const npy_intp out_stride_row = y_stride_row_byte / sizeof(T3);
+  const npy_intp out_stride_col = y_stride_col_byte / sizeof(T3);
+  const npy_intp in_stride_row = in_stride_row_byte / sizeof(T3);
+  const npy_intp in_stride_col = in_stride_col_byte / sizeof(T3);
 
-  if (y_stride_col == 1) {
-    if (x_stride_col == 1) {
-      csr_matvecs_omp_strided(overwrite_y, n_row, n_vecs, Ap, Aj, Ax, a,
-                              x_stride_row, 1, x, y_stride_row, 1, y);
-    } else if (x_stride_row == 1) {
-      csr_matvecs_omp_strided(overwrite_y, n_row, n_vecs, Ap, Aj, Ax, a, 1,
-                              x_stride_col, x, y_stride_row, 1, y);
+  if (out_stride_col == 1) {
+    if (in_stride_col == 1) {
+      csr_matvecs_omp_strided(overwrite_out, n_row, n_vecs, indptr, indices, data, a,
+                              in_stride_row, 1, in, out_stride_row, 1, out);
+    } else if (in_stride_row == 1) {
+      csr_matvecs_omp_strided(overwrite_out, n_row, n_vecs, indptr, indices, data, a, 1,
+                              in_stride_col, in, out_stride_row, 1, out);
     } else {
-      csr_matvecs_omp_strided(overwrite_y, n_row, n_vecs, Ap, Aj, Ax, a,
-                              x_stride_row, x_stride_col, x, y_stride_row, 1,
-                              y);
+      csr_matvecs_omp_strided(overwrite_out, n_row, n_vecs, indptr, indices, data, a,
+                              in_stride_row, in_stride_col, in, out_stride_row, 1,
+                              out);
     }
-  } else if (y_stride_row == 1) {
-    if (x_stride_col == 1) {
-      csr_matvecs_omp_strided(overwrite_y, n_row, n_vecs, Ap, Aj, Ax, a,
-                              x_stride_row, 1, x, 1, y_stride_col, y);
-    } else if (x_stride_row == 1) {
-      csr_matvecs_omp_strided(overwrite_y, n_row, n_vecs, Ap, Aj, Ax, a, 1,
-                              x_stride_col, x, 1, y_stride_col, y);
+  } else if (out_stride_row == 1) {
+    if (in_stride_col == 1) {
+      csr_matvecs_omp_strided(overwrite_out, n_row, n_vecs, indptr, indices, data, a,
+                              in_stride_row, 1, in, 1, out_stride_col, out);
+    } else if (in_stride_row == 1) {
+      csr_matvecs_omp_strided(overwrite_out, n_row, n_vecs, indptr, indices, data, a, 1,
+                              in_stride_col, in, 1, out_stride_col, out);
     } else {
-      csr_matvecs_omp_strided(overwrite_y, n_row, n_vecs, Ap, Aj, Ax, a,
-                              x_stride_row, x_stride_col, x, 1, y_stride_col,
-                              y);
+      csr_matvecs_omp_strided(overwrite_out, n_row, n_vecs, indptr, indices, data, a,
+                              in_stride_row, in_stride_col, in, 1, out_stride_col,
+                              out);
     }
   } else {
-    csr_matvecs_omp_strided(overwrite_y, n_row, n_vecs, Ap, Aj, Ax, a,
-                            x_stride_row, x_stride_col, x, y_stride_row,
-                            y_stride_col, y);
+    csr_matvecs_omp_strided(overwrite_out, n_row, n_vecs, indptr, indices, data, a,
+                            in_stride_row, in_stride_col, in, out_stride_row,
+                            out_stride_col, out);
   }
 }
 

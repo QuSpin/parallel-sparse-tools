@@ -65,6 +65,8 @@
         "ndarraytypes.h": "c",
         "npy_cpu.h": "c",
         "npy_endian.h": "c",
-        "npy_common.h": "c"
+        "npy_common.h": "c",
+        "class.h": "c",
+        "init.h": "c"
     }
 }
