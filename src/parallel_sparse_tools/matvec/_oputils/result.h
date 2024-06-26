@@ -1,6 +1,8 @@
 #ifndef __oputils_result_h__
 #define __oputils_result_h__
 
+#include <type_traits>
+
 template <typename... T> struct result_type {};
 
 template <typename... T> using result_type_t = typename result_type<T...>::type;

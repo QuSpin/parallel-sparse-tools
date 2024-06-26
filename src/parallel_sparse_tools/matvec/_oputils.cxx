@@ -32,7 +32,9 @@ enum class ReturnState {
   INVALID_INDPTR_NDIM,
   INVALID_INDPTR_SIZE,
   INVALID_INDICES_NDIM,
-  INVALID_DATA_NDIM
+  INVALID_DATA_NDIM,
+  INVALID_ALPHA_TYPE,
+  INVALID_ALPHA_NDIM
 };
 
 using data_array =
@@ -48,6 +50,8 @@ using dense_array =
     std::variant<py::array_t<float>, py::array_t<double>,
                  py::array_t<long double>, py::array_t<cfloat>,
                  py::array_t<cdouble>, py::array_t<clongdouble>, ReturnState>;
+
+using scalar_array = dense_array;
 
 data_array get_data_array(py::array &arr) {
   const int num = arr.dtype().num();
@@ -97,7 +101,7 @@ index_array get_indices_array(py::array &arr) {
   }
 }
 
-dense_array get_x_array(py::array &arr) {
+dense_array get_in_array(py::array &arr) {
   const int num = arr.dtype().num();
   switch (num) {
   case py::detail::npy_api::NPY_FLOAT_:
@@ -117,7 +121,7 @@ dense_array get_x_array(py::array &arr) {
   }
 }
 
-dense_array get_y_array(py::array &arr) {
+dense_array get_out_array(py::array &arr) {
   const int num = arr.dtype().num();
   switch (num) {
   case py::detail::npy_api::NPY_FLOAT_:
@@ -137,22 +141,42 @@ dense_array get_y_array(py::array &arr) {
   }
 }
 
+scalar_array get_scalar_array(py::array &arr) {
+  const int num = arr.dtype().num();
+  switch (num) {
+  case py::detail::npy_api::NPY_FLOAT_:
+    return py::array_t<float>(arr);
+  case py::detail::npy_api::NPY_DOUBLE_:
+    return py::array_t<double>(arr);
+  case py::detail::npy_api::NPY_LONGDOUBLE_:
+    return py::array_t<long double>(arr);
+  case py::detail::npy_api::NPY_CFLOAT_:
+    return py::array_t<cfloat>(arr);
+  case py::detail::npy_api::NPY_CDOUBLE_:
+    return py::array_t<cdouble>(arr);
+  case py::detail::npy_api::NPY_CLONGDOUBLE_:
+    return py::array_t<clongdouble>(arr);
+  default:
+    return ReturnState::INVALID_ALPHA_TYPE;
+  }
+}
+
 template <typename T> bool is_c_contiguous(const py::array_t<T> &arr) {
   return (arr.flags() & py::array::c_style) != 0;
 }
 
 template <typename x_t, typename y_t>
 ReturnState check_shapes(const npy_intp n_col, const npy_intp n_row,
-                         const py::array_t<x_t> x, py::array_t<y_t> y) {
-  const ssize_t x_row = x.shape(0);
-  const ssize_t y_row = y.shape(0);
-  const ssize_t x_col = x.ndim() == 1 ? 1 : x.shape(1);
-  const ssize_t y_col = y.ndim() == 1 ? 1 : y.shape(1);
+                         const py::array_t<x_t> in, py::array_t<y_t> out) {
+  const ssize_t x_row = in.shape(0);
+  const ssize_t y_row = out.shape(0);
+  const ssize_t x_col = in.ndim() == 1 ? 1 : in.shape(1);
+  const ssize_t y_col = out.ndim() == 1 ? 1 : out.shape(1);
 
-  if (y.ndim() > 2 || y.ndim() < 1) {
+  if (out.ndim() > 2 || out.ndim() < 1) {
     return ReturnState::INVALID_OUT_NDIM;
   }
-  if (x.ndim() > 2 || x.ndim() < 1) {
+  if (in.ndim() > 2 || in.ndim() < 1) {
     return ReturnState::INVALID_IN_NDIM;
   }
   if (n_row < 0) {
@@ -210,13 +234,26 @@ ReturnState check_data(const py::array_t<data_t> &data) {
   return ReturnState::SUCCESS;
 }
 
-template <typename index_t, typename data_t, typename x_t, typename y_t>
+ReturnState check_alpha(const py::array &alpha) {
+  if (alpha.ndim() != 0) {
+    return ReturnState::INVALID_ALPHA_NDIM;
+  }
+  return ReturnState::SUCCESS;
+}
+
+template <typename index_t, typename data_t, typename alpha_t, typename x_t,
+          typename y_t>
 ReturnState check_csr_arrays(const npy_intp n_col, const npy_intp n_row,
                              const py::array_t<index_t> indices,
                              const py::array_t<index_t> indptr,
                              const py::array_t<data_t> data,
-                             const py::array_t<x_t> x, py::array_t<y_t> y) {
-  auto return_state = check_shapes(n_col, n_row, x, y);
+                             const py::array_t<alpha_t> alpha,
+                             const py::array_t<x_t> in, py::array_t<y_t> out) {
+  auto return_state = check_shapes(n_col, n_row, in, out);
+  if (return_state != ReturnState::SUCCESS) {
+    return return_state;
+  }
+  return_state = check_alpha(alpha);
   if (return_state != ReturnState::SUCCESS) {
     return return_state;
   }
@@ -238,27 +275,28 @@ ReturnState check_csr_arrays(const npy_intp n_col, const npy_intp n_row,
   return return_state;
 }
 
-template <typename ScalarType>
 ReturnState csr_matvec(const bool overwrite, const npy_intp n_col,
-                       const npy_intp n_row, const ScalarType alpha,
+                       const npy_intp n_row, py::array py_alpha,
                        py::array py_indptr, py::array py_indices,
                        py::array py_data, py::array py_x, py::array py_y) {
 
+  scalar_array alpha = get_scalar_array(py_alpha);
   index_array indptr = get_indptr_array(py_indptr);
   index_array indices = get_indices_array(py_indices);
   data_array data = get_data_array(py_data);
-  dense_array x = get_x_array(py_x);
-  dense_array y = get_y_array(py_y);
+  dense_array in = get_in_array(py_x);
+  dense_array out = get_out_array(py_y);
 
   return std::visit(
-      [&overwrite, &n_row, &n_col,
-       &alpha](const auto &indptr, const auto &indices, const auto &data,
-               const auto &x, auto &y) {
+      [&overwrite, &n_row, &n_col](const auto &indptr, const auto &indices,
+                                   const auto &data, const auto &alpha,
+                                   const auto &in, auto &out) {
         using indptr_variant_t = std::decay_t<decltype(indptr)>;
         using indices_variant_t = std::decay_t<decltype(indices)>;
         using data_variant_t = std::decay_t<decltype(data)>;
-        using x_variant_t = std::decay_t<decltype(x)>;
-        using y_variant_t = std::decay_t<decltype(y)>;
+        using alpha_variant_t = std::decay_t<decltype(alpha)>;
+        using x_variant_t = std::decay_t<decltype(in)>;
+        using y_variant_t = std::decay_t<decltype(out)>;
 
         if constexpr (std::is_same_v<indptr_variant_t, ReturnState>) {
           return indptr;
@@ -266,17 +304,19 @@ ReturnState csr_matvec(const bool overwrite, const npy_intp n_col,
           return indices;
         } else if constexpr (std::is_same_v<data_variant_t, ReturnState>) {
           return data;
+        } else if constexpr (std::is_same_v<alpha_variant_t, ReturnState>) {
+          return alpha;
         } else if constexpr (std::is_same_v<x_variant_t, ReturnState>) {
-          return x;
+          return in;
         } else if constexpr (std::is_same_v<y_variant_t, ReturnState>) {
-          return y;
+          return out;
         } else {
           using indptr_t = typename indptr_variant_t::value_type;
           using indices_t = typename indices_variant_t::value_type;
           using data_t = typename data_variant_t::value_type;
+          using alpha_t = typename alpha_variant_t::value_type;
           using y_t = typename x_variant_t::value_type;
           using x_t = typename y_variant_t::value_type;
-          using alpha_t = std::decay_t<decltype(alpha)>;
           using result_t = result_type_t<data_t, alpha_t, x_t>;
 
           if constexpr (!std::is_same_v<x_t, y_t>) {
@@ -287,58 +327,85 @@ ReturnState csr_matvec(const bool overwrite, const npy_intp n_col,
             return ReturnState::MISMATCH_INDEX_TYPES;
           } else {
             ReturnState return_state =
-                check_csr_arrays(n_col, n_row, indices, indptr, data, x, y);
+                check_csr_arrays(n_col, n_row, indices, indptr, data, alpha, in, out);
 
             if (return_state != ReturnState::SUCCESS) {
               return return_state;
             }
 
-            ssize_t x_col = x.ndim() == 1 ? 1 : x.shape(1);
+            ssize_t x_col = in.ndim() == 1 ? 1 : in.shape(1);
 
             if (indices.size() < 100) {
               if (x_col == 1) {
                 csr_matvec_noomp(overwrite, static_cast<indptr_t>(n_row),
                                  static_cast<indptr_t>(n_col), indptr.data(),
-                                 indices.data(), data.data(), alpha,
-                                 x.strides(0), x.data(), y.strides(0),
-                                 y.mutable_data());
+                                 indices.data(), data.data(), *alpha.data(),
+                                 in.strides(0), in.data(), out.strides(0),
+                                 out.mutable_data());
               } else {
-                csr_matvecs_noomp(overwrite, static_cast<indptr_t>(n_row),
-                                  static_cast<indptr_t>(n_col),
-                                  static_cast<indptr_t>(x_col), indptr.data(),
-                                  indices.data(), data.data(), alpha,
-                                  x.strides(0), x.strides(1), x.data(),
-                                  y.strides(0), y.strides(1), y.mutable_data());
+                csr_matvecs_noomp(
+                    overwrite, static_cast<indptr_t>(n_row),
+                    static_cast<indptr_t>(n_col), static_cast<indptr_t>(x_col),
+                    indptr.data(), indices.data(), data.data(), *alpha.data(),
+                    in.strides(0), in.strides(1), in.data(), out.strides(0),
+                    out.strides(1), out.mutable_data());
               }
             } else {
               py::gil_scoped_release release;
               if (x_col == 1) {
                 csr_matvec_omp(overwrite, static_cast<indptr_t>(n_row),
                                static_cast<indptr_t>(n_col), indptr.data(),
-                               indices.data(), data.data(), alpha, x.strides(0),
-                               x.data(), y.strides(0), y.mutable_data());
+                               indices.data(), data.data(), *alpha.data(),
+                               in.strides(0), in.data(), out.strides(0),
+                               out.mutable_data());
               } else {
-                csr_matvecs_omp(overwrite, static_cast<indptr_t>(n_row),
-                                static_cast<indptr_t>(n_col),
-                                static_cast<indptr_t>(x_col), indptr.data(),
-                                indices.data(), data.data(), alpha,
-                                x.strides(0), x.strides(1), x.data(),
-                                y.strides(0), y.strides(1), y.mutable_data());
+                csr_matvecs_omp(
+                    overwrite, static_cast<indptr_t>(n_row),
+                    static_cast<indptr_t>(n_col), static_cast<indptr_t>(x_col),
+                    indptr.data(), indices.data(), data.data(), *alpha.data(),
+                    in.strides(0), in.strides(1), in.data(), out.strides(0),
+                    out.strides(1), out.mutable_data());
               }
             }
           }
           return ReturnState::SUCCESS;
         }
       },
-      indptr, indices, data, x, y);
+      indptr, indices, data, alpha, in, out);
 }
 
-PYBIND11_MODULE(ext, m) {
-  m.def("csr_matvec", &csr_matvec<int64_t>);
-  m.def("csr_matvec", &csr_matvec<float>);
-  m.def("csr_matvec", &csr_matvec<double>);
-  m.def("csr_matvec", &csr_matvec<long double>);
-  m.def("csr_matvec", &csr_matvec<cfloat>);
-  m.def("csr_matvec", &csr_matvec<cdouble>);
-  m.def("csr_matvec", &csr_matvec<clongdouble>);
+PYBIND11_MODULE(_oputils, m) {
+
+  PYBIND11_NUMPY_DTYPE(cfloat, real, imag);
+  PYBIND11_NUMPY_DTYPE(cdouble, real, imag);
+  PYBIND11_NUMPY_DTYPE(clongdouble, real, imag);
+
+  py::enum_<ReturnState>(m, "ReturnState")
+      .value("SUCCESS", ReturnState::SUCCESS)
+      .value("INVALID_N_ROW", ReturnState::INVALID_N_ROW)
+      .value("INVALID_N_COL", ReturnState::INVALID_N_COL)
+      .value("MISMATCH_IN_OUT_TYPES", ReturnState::MISMATCH_IN_OUT_TYPES)
+      .value("MISMATCH_INDEX_TYPES", ReturnState::MISMATCH_INDEX_TYPES)
+      .value("INVALID_OUT_TYPE", ReturnState::INVALID_OUT_TYPE)
+      .value("INVALID_OUT_NDIM", ReturnState::INVALID_OUT_NDIM)
+      .value("MISMATCH_IN_DIM", ReturnState::MISMATCH_IN_DIM)
+      .value("INVALID_IN_NDIM", ReturnState::INVALID_IN_NDIM)
+      .value("INVALID_IN_TYPE", ReturnState::INVALID_IN_TYPE)
+      .value("MISMATCH_OUT_DIM", ReturnState::MISMATCH_OUT_DIM)
+      .value("DIM_MISMATCH_IN_OUT", ReturnState::DIM_MISMATCH_IN_OUT)
+      .value("INDPTR_NOT_C_CONTIGUOUS", ReturnState::INDPTR_NOT_C_CONTIGUOUS)
+      .value("INVALID_INDPTR_TYPE", ReturnState::INVALID_INDPTR_TYPE)
+      .value("INDICES_NOT_C_CONTIGUOUS", ReturnState::INDICES_NOT_C_CONTIGUOUS)
+      .value("INVALID_INDICES_TYPE", ReturnState::INVALID_INDICES_TYPE)
+      .value("DATA_NOT_C_CONTIGUOUS", ReturnState::DATA_NOT_C_CONTIGUOUS)
+      .value("INVALID_DATA_TYPE", ReturnState::INVALID_DATA_TYPE)
+      .value("INVALID_INDPTR_NDIM", ReturnState::INVALID_INDPTR_NDIM)
+      .value("INVALID_INDPTR_SIZE", ReturnState::INVALID_INDPTR_SIZE)
+      .value("INVALID_INDICES_NDIM", ReturnState::INVALID_INDICES_NDIM)
+      .value("INVALID_DATA_NDIM", ReturnState::INVALID_DATA_NDIM)
+      .value("INVALID_ALPHA_TYPE", ReturnState::INVALID_ALPHA_TYPE)
+      .value("INVALID_ALPHA_NDIM", ReturnState::INVALID_ALPHA_NDIM);
+
+
+  m.def("csr_matvec", &csr_matvec);
 }
