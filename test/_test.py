@@ -1,22 +1,36 @@
-from parallel_sparse_tools.matvec._oputils import csr_matvec
+from parallel_sparse_tools.matvec._oputils import csr_matvec, ReturnState
 import numpy as np
 import scipy.sparse as sp
 from cProfile import Profile
 
-N = 10000
-A = sp.rand(N, N, density=np.log(N)/N, format='csr').astype(np.float64)
-x = np.random.uniform(-1, 1, size=N).astype(np.float64)
-y = np.zeros(N).astype(np.float64)
+N = 10
 
+nnz = int(N*np.log(N))
+row = np.random.randint(0, N, size=nnz)
+col = np.random.randint(0, N, size=nnz)
+data = np.random.uniform(-1, 1, size=nnz)
 
-with Profile() as pr:
-    for i in range(100):
-        status = csr_matvec(True, A.shape[0], A.shape[1], np.array(1.0j), A.indptr, A.indices, A.data, x, y)
+A = sp.csr_matrix((data, (row, col)), shape=(N, N))
+alpha = np.array(1.0, dtype=np.float64)
+x = np.random.uniform(-1, 1, size=N).astype(np.complex128)
+y = np.zeros(N).astype(np.result_type(alpha, x, A.dtype))
 
-pr.print_stats("cumtime")
+y_expected = alpha * (A @ x)
+status = csr_matvec(True, A.shape[0], A.shape[1], alpha, A.indptr, A.indices, A.data, x, y)
 
-with Profile() as pr:
-    for i in range(100):
-        y = 1.0j * (A @ x)
+assert status == ReturnState.SUCCESS
+print(y, y_expected)
+assert np.array_equal(y, y_expected)
 
-pr.print_stats("cumtime")
+# with Profile() as pr:
+#     for i in range(10):
+#         status = csr_matvec(True, A.shape[0], A.shape[1], alpha, A.indptr, A.indices, A.data, x, y)
+#         assert status == ReturnState.SUCCESS
+
+# pr.print_stats("cumtime")
+
+# with Profile() as pr:
+#     for i in range(10):
+#         y = alpha * (A @ x)
+
+# pr.print_stats("cumtime")

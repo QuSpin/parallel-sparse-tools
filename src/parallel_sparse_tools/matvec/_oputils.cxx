@@ -3,12 +3,54 @@
 #include <pybind11/numpy.h>
 #include <pybind11/pybind11.h>
 #include <variant>
+#include <iostream>
 
 #include "complex_ops.h"
 #include "csr.h"
 #include "result.h"
 
 namespace py = pybind11;
+
+
+void print_type(int type_num, std::string name) {
+  std::cout << name << " type: ";
+  switch (type_num) {
+  case py::detail::npy_api::NPY_INT8_:
+    std::cout << "int8_t";
+    break;
+  case py::detail::npy_api::NPY_INT16_:
+    std::cout << "int16_t";
+    break;
+  case py::detail::npy_api::NPY_INT32_:
+    std::cout << "int32_t";
+    break;
+  case py::detail::npy_api::NPY_INT64_:
+    std::cout << "int64_t";
+    break;
+  case py::detail::npy_api::NPY_FLOAT_:
+    std::cout << "float";
+    break;
+  case py::detail::npy_api::NPY_DOUBLE_:
+    std::cout << "double";
+    break;
+  case py::detail::npy_api::NPY_LONGDOUBLE_:
+    std::cout << "long double";
+    break;
+  case py::detail::npy_api::NPY_CFLOAT_:
+    std::cout << "cfloat";
+    break;
+  case py::detail::npy_api::NPY_CDOUBLE_:
+    std::cout << "cdouble";
+    break;
+  case py::detail::npy_api::NPY_CLONGDOUBLE_:
+    std::cout << "clongdouble";
+    break;
+  default:
+    std::cout << "unknown: " << type_num;
+  }
+  std::cout << std::endl;
+}
+
 
 enum class ReturnState {
   SUCCESS = 0,
@@ -39,22 +81,30 @@ enum class ReturnState {
 
 using data_array =
     std::variant<py::array_t<int8_t>, py::array_t<int16_t>, py::array_t<float>,
-                 py::array_t<double>, py::array_t<long double>,
+                 py::array_t<double>, 
+                //  py::array_t<long double>,
                  py::array_t<cfloat>, py::array_t<cdouble>,
-                 py::array_t<clongdouble>, ReturnState>;
+                //  py::array_t<clongdouble>, 
+                 ReturnState>;
 
 using index_array =
-    std::variant<py::array_t<int32_t>, py::array_t<int64_t>, ReturnState>;
+    std::variant<py::array_t<int32_t>, 
+    // py::array_t<int64_t>, 
+    ReturnState>;
 
 using dense_array =
     std::variant<py::array_t<float>, py::array_t<double>,
-                 py::array_t<long double>, py::array_t<cfloat>,
-                 py::array_t<cdouble>, py::array_t<clongdouble>, ReturnState>;
+                //  py::array_t<long double>, 
+                 py::array_t<cfloat>,
+                 py::array_t<cdouble>,
+                //  py::array_t<clongdouble>, 
+                 ReturnState>;
 
 using scalar_array = dense_array;
 
 data_array get_data_array(py::array &arr) {
   const int num = arr.dtype().num();
+  print_type(num, "data");
   switch (num) {
   case py::detail::npy_api::NPY_INT8_:
     return py::array_t<int8_t>(arr);
@@ -64,14 +114,14 @@ data_array get_data_array(py::array &arr) {
     return py::array_t<float>(arr);
   case py::detail::npy_api::NPY_DOUBLE_:
     return py::array_t<double>(arr);
-  case py::detail::npy_api::NPY_LONGDOUBLE_:
-    return py::array_t<long double>(arr);
+  // case py::detail::npy_api::NPY_LONGDOUBLE_:
+  //   return py::array_t<long double>(arr);
   case py::detail::npy_api::NPY_CFLOAT_:
     return py::array_t<cfloat>(arr);
   case py::detail::npy_api::NPY_CDOUBLE_:
     return py::array_t<cdouble>(arr);
-  case py::detail::npy_api::NPY_CLONGDOUBLE_:
-    return py::array_t<clongdouble>(arr);
+  // case py::detail::npy_api::NPY_CLONGDOUBLE_:
+  //   return py::array_t<clongdouble>(arr);
   default:
     return ReturnState::INVALID_DATA_TYPE;
   }
@@ -79,11 +129,12 @@ data_array get_data_array(py::array &arr) {
 
 index_array get_indptr_array(py::array &arr) {
   const int num = arr.dtype().num();
+  print_type(num, "indptr");
   switch (num) {
   case py::detail::npy_api::NPY_INT32_:
     return py::array_t<int32_t>(arr);
-  case py::detail::npy_api::NPY_INT64_:
-    return py::array_t<int64_t>(arr);
+  // case py::detail::npy_api::NPY_INT64_:
+  //   return py::array_t<int64_t>(arr);
   default:
     return ReturnState::INVALID_INDPTR_TYPE;
   }
@@ -91,11 +142,12 @@ index_array get_indptr_array(py::array &arr) {
 
 index_array get_indices_array(py::array &arr) {
   const int num = arr.dtype().num();
+  print_type(num, "indices");
   switch (num) {
   case py::detail::npy_api::NPY_INT32_:
     return py::array_t<int32_t>(arr);
-  case py::detail::npy_api::NPY_INT64_:
-    return py::array_t<int64_t>(arr);
+  // case py::detail::npy_api::NPY_INT64_:
+  //   return py::array_t<int64_t>(arr);
   default:
     return ReturnState::INVALID_INDICES_TYPE;
   }
@@ -103,19 +155,20 @@ index_array get_indices_array(py::array &arr) {
 
 dense_array get_in_array(py::array &arr) {
   const int num = arr.dtype().num();
+  print_type(num, "in");
   switch (num) {
   case py::detail::npy_api::NPY_FLOAT_:
     return py::array_t<float>(arr);
   case py::detail::npy_api::NPY_DOUBLE_:
     return py::array_t<double>(arr);
-  case py::detail::npy_api::NPY_LONGDOUBLE_:
-    return py::array_t<long double>(arr);
+  // case py::detail::npy_api::NPY_LONGDOUBLE_:
+  //   return py::array_t<long double>(arr);
   case py::detail::npy_api::NPY_CFLOAT_:
     return py::array_t<cfloat>(arr);
   case py::detail::npy_api::NPY_CDOUBLE_:
     return py::array_t<cdouble>(arr);
-  case py::detail::npy_api::NPY_CLONGDOUBLE_:
-    return py::array_t<clongdouble>(arr);
+  // case py::detail::npy_api::NPY_CLONGDOUBLE_:
+  //   return py::array_t<clongdouble>(arr);
   default:
     return ReturnState::INVALID_IN_TYPE;
   }
@@ -123,19 +176,20 @@ dense_array get_in_array(py::array &arr) {
 
 dense_array get_out_array(py::array &arr) {
   const int num = arr.dtype().num();
+  print_type(num, "out");
   switch (num) {
   case py::detail::npy_api::NPY_FLOAT_:
     return py::array_t<float>(arr);
   case py::detail::npy_api::NPY_DOUBLE_:
     return py::array_t<double>(arr);
   case py::detail::npy_api::NPY_LONGDOUBLE_:
-    return py::array_t<long double>(arr);
-  case py::detail::npy_api::NPY_CFLOAT_:
+  //   return py::array_t<long double>(arr);
+  // case py::detail::npy_api::NPY_CFLOAT_:
     return py::array_t<cfloat>(arr);
   case py::detail::npy_api::NPY_CDOUBLE_:
     return py::array_t<cdouble>(arr);
-  case py::detail::npy_api::NPY_CLONGDOUBLE_:
-    return py::array_t<clongdouble>(arr);
+  // case py::detail::npy_api::NPY_CLONGDOUBLE_:
+  //   return py::array_t<clongdouble>(arr);
   default:
     return ReturnState::INVALID_OUT_TYPE;
   }
@@ -143,31 +197,31 @@ dense_array get_out_array(py::array &arr) {
 
 scalar_array get_scalar_array(py::array &arr) {
   const int num = arr.dtype().num();
+  print_type(num, "alpha");
   switch (num) {
   case py::detail::npy_api::NPY_FLOAT_:
     return py::array_t<float>(arr);
   case py::detail::npy_api::NPY_DOUBLE_:
     return py::array_t<double>(arr);
-  case py::detail::npy_api::NPY_LONGDOUBLE_:
-    return py::array_t<long double>(arr);
+  // case py::detail::npy_api::NPY_LONGDOUBLE_:
+  //   return py::array_t<long double>(arr);
   case py::detail::npy_api::NPY_CFLOAT_:
     return py::array_t<cfloat>(arr);
   case py::detail::npy_api::NPY_CDOUBLE_:
     return py::array_t<cdouble>(arr);
-  case py::detail::npy_api::NPY_CLONGDOUBLE_:
-    return py::array_t<clongdouble>(arr);
+  // case py::detail::npy_api::NPY_CLONGDOUBLE_:
+  //   return py::array_t<clongdouble>(arr);
   default:
     return ReturnState::INVALID_ALPHA_TYPE;
   }
 }
 
-template <typename T> bool is_c_contiguous(const py::array_t<T> &arr) {
+bool is_c_contiguous(const py::array &arr) {
   return (arr.flags() & py::array::c_style) != 0;
 }
 
-template <typename x_t, typename y_t>
 ReturnState check_shapes(const npy_intp n_col, const npy_intp n_row,
-                         const py::array_t<x_t> in, py::array_t<y_t> out) {
+                         const py::array in, py::array out) {
   const ssize_t x_row = in.shape(0);
   const ssize_t y_row = out.shape(0);
   const ssize_t x_col = in.ndim() == 1 ? 1 : in.shape(1);
@@ -197,9 +251,8 @@ ReturnState check_shapes(const npy_intp n_col, const npy_intp n_row,
   return ReturnState::SUCCESS;
 }
 
-template <typename index_t>
 ReturnState check_indptr(const npy_intp n_row_or_col,
-                         const py::array_t<index_t> indptr) {
+                         const py::array indptr) {
   if (indptr.ndim() != 1) {
     return ReturnState::INVALID_INDPTR_NDIM;
   }
@@ -212,8 +265,7 @@ ReturnState check_indptr(const npy_intp n_row_or_col,
   return ReturnState::SUCCESS;
 }
 
-template <typename index_t>
-ReturnState check_indices(const py::array_t<index_t> indices) {
+ReturnState check_indices(const py::array indices) {
   if (indices.ndim() != 1) {
     return ReturnState::INVALID_INDICES_NDIM;
   }
@@ -223,8 +275,7 @@ ReturnState check_indices(const py::array_t<index_t> indices) {
   return ReturnState::SUCCESS;
 }
 
-template <typename data_t>
-ReturnState check_data(const py::array_t<data_t> &data) {
+ReturnState check_data(const py::array &data) {
   if (data.ndim() != 1) {
     return ReturnState::INVALID_DATA_NDIM;
   }
@@ -241,14 +292,13 @@ ReturnState check_alpha(const py::array &alpha) {
   return ReturnState::SUCCESS;
 }
 
-template <typename index_t, typename data_t, typename alpha_t, typename x_t,
-          typename y_t>
 ReturnState check_csr_arrays(const npy_intp n_col, const npy_intp n_row,
-                             const py::array_t<index_t> indices,
-                             const py::array_t<index_t> indptr,
-                             const py::array_t<data_t> data,
-                             const py::array_t<alpha_t> alpha,
-                             const py::array_t<x_t> in, py::array_t<y_t> out) {
+                             const py::array indices,
+                             const py::array indptr,
+                             const py::array data,
+                             const py::array alpha,
+                             const py::array in, py::array out) {
+  
   auto return_state = check_shapes(n_col, n_row, in, out);
   if (return_state != ReturnState::SUCCESS) {
     return return_state;
@@ -278,14 +328,14 @@ ReturnState check_csr_arrays(const npy_intp n_col, const npy_intp n_row,
 ReturnState csr_matvec(const bool overwrite, const npy_intp n_col,
                        const npy_intp n_row, py::array py_alpha,
                        py::array py_indptr, py::array py_indices,
-                       py::array py_data, py::array py_x, py::array py_y) {
+                       py::array py_data, py::array py_in, py::array py_out) {
 
   scalar_array alpha = get_scalar_array(py_alpha);
   index_array indptr = get_indptr_array(py_indptr);
   index_array indices = get_indices_array(py_indices);
   data_array data = get_data_array(py_data);
-  dense_array in = get_in_array(py_x);
-  dense_array out = get_out_array(py_y);
+  dense_array in = get_in_array(py_in);
+  dense_array out = get_out_array(py_out);
 
   return std::visit(
       [&overwrite, &n_row, &n_col](const auto &indptr, const auto &indices,
@@ -295,8 +345,8 @@ ReturnState csr_matvec(const bool overwrite, const npy_intp n_col,
         using indices_variant_t = std::decay_t<decltype(indices)>;
         using data_variant_t = std::decay_t<decltype(data)>;
         using alpha_variant_t = std::decay_t<decltype(alpha)>;
-        using x_variant_t = std::decay_t<decltype(in)>;
-        using y_variant_t = std::decay_t<decltype(out)>;
+        using in_variant_t = std::decay_t<decltype(in)>;
+        using out_variant_t = std::decay_t<decltype(out)>;
 
         if constexpr (std::is_same_v<indptr_variant_t, ReturnState>) {
           return indptr;
@@ -306,22 +356,22 @@ ReturnState csr_matvec(const bool overwrite, const npy_intp n_col,
           return data;
         } else if constexpr (std::is_same_v<alpha_variant_t, ReturnState>) {
           return alpha;
-        } else if constexpr (std::is_same_v<x_variant_t, ReturnState>) {
+        } else if constexpr (std::is_same_v<in_variant_t, ReturnState>) {
           return in;
-        } else if constexpr (std::is_same_v<y_variant_t, ReturnState>) {
+        } else if constexpr (std::is_same_v<out_variant_t, ReturnState>) {
           return out;
         } else {
           using indptr_t = typename indptr_variant_t::value_type;
           using indices_t = typename indices_variant_t::value_type;
           using data_t = typename data_variant_t::value_type;
           using alpha_t = typename alpha_variant_t::value_type;
-          using y_t = typename x_variant_t::value_type;
-          using x_t = typename y_variant_t::value_type;
-          using result_t = result_type_t<data_t, alpha_t, x_t>;
+          using in_t = typename in_variant_t::value_type;
+          using out_t = typename out_variant_t::value_type;
+          using result_t = result_type_t<data_t, alpha_t, out_t>;
 
-          if constexpr (!std::is_same_v<x_t, y_t>) {
+          if constexpr (!std::is_same_v<out_t, in_t>) {
             return ReturnState::MISMATCH_IN_OUT_TYPES;
-          } else if constexpr (!std::is_same_v<x_t, result_t>) {
+          } else if constexpr (!std::is_same_v<out_t, result_t>) {
             return ReturnState::INVALID_OUT_TYPE;
           } else if constexpr (!std::is_same_v<indptr_t, indices_t>) {
             return ReturnState::MISMATCH_INDEX_TYPES;
@@ -333,7 +383,7 @@ ReturnState csr_matvec(const bool overwrite, const npy_intp n_col,
               return return_state;
             }
 
-            ssize_t x_col = in.ndim() == 1 ? 1 : in.shape(1);
+            const ssize_t x_col = in.ndim() == 1 ? 1 : in.shape(1);
 
             if (indices.size() < 100) {
               if (x_col == 1) {
@@ -375,10 +425,6 @@ ReturnState csr_matvec(const bool overwrite, const npy_intp n_col,
 }
 
 PYBIND11_MODULE(_oputils, m) {
-
-  PYBIND11_NUMPY_DTYPE(cfloat, real, imag);
-  PYBIND11_NUMPY_DTYPE(cdouble, real, imag);
-  PYBIND11_NUMPY_DTYPE(clongdouble, real, imag);
 
   py::enum_<ReturnState>(m, "ReturnState")
       .value("SUCCESS", ReturnState::SUCCESS)
