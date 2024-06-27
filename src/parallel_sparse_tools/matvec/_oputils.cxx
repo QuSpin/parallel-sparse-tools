@@ -1,13 +1,14 @@
 
+#include "complex_ops.h"
+#include "csr.h"
+#include "result.h"
 
 #include <pybind11/numpy.h>
 #include <pybind11/pybind11.h>
 #include <variant>
 #include <iostream>
 
-#include "complex_ops.h"
-#include "csr.h"
-#include "result.h"
+
 
 namespace py = pybind11;
 
@@ -43,7 +44,7 @@ void print_type(int type_num, std::string name) {
     std::cout << "cdouble";
     break;
   case py::detail::npy_api::NPY_CLONGDOUBLE_:
-    std::cout << "clongdouble";
+    std::cout << "cldouble";
     break;
   default:
     std::cout << "unknown: " << type_num;
@@ -84,7 +85,7 @@ using data_array =
                  py::array_t<double>, 
                 //  py::array_t<long double>,
                  py::array_t<cfloat>, py::array_t<cdouble>,
-                //  py::array_t<clongdouble>, 
+                //  py::array_t<cldouble>, 
                  ReturnState>;
 
 using index_array =
@@ -97,7 +98,7 @@ using dense_array =
                 //  py::array_t<long double>, 
                  py::array_t<cfloat>,
                  py::array_t<cdouble>,
-                //  py::array_t<clongdouble>, 
+                //  py::array_t<cldouble>, 
                  ReturnState>;
 
 using scalar_array = dense_array;
@@ -121,7 +122,7 @@ data_array get_data_array(py::array &arr) {
   case py::detail::npy_api::NPY_CDOUBLE_:
     return py::array_t<cdouble>(arr);
   // case py::detail::npy_api::NPY_CLONGDOUBLE_:
-  //   return py::array_t<clongdouble>(arr);
+  //   return py::array_t<cldouble>(arr);
   default:
     return ReturnState::INVALID_DATA_TYPE;
   }
@@ -168,7 +169,7 @@ dense_array get_in_array(py::array &arr) {
   case py::detail::npy_api::NPY_CDOUBLE_:
     return py::array_t<cdouble>(arr);
   // case py::detail::npy_api::NPY_CLONGDOUBLE_:
-  //   return py::array_t<clongdouble>(arr);
+  //   return py::array_t<cldouble>(arr);
   default:
     return ReturnState::INVALID_IN_TYPE;
   }
@@ -189,7 +190,7 @@ dense_array get_out_array(py::array &arr) {
   case py::detail::npy_api::NPY_CDOUBLE_:
     return py::array_t<cdouble>(arr);
   // case py::detail::npy_api::NPY_CLONGDOUBLE_:
-  //   return py::array_t<clongdouble>(arr);
+  //   return py::array_t<cldouble>(arr);
   default:
     return ReturnState::INVALID_OUT_TYPE;
   }
@@ -210,7 +211,7 @@ scalar_array get_scalar_array(py::array &arr) {
   case py::detail::npy_api::NPY_CDOUBLE_:
     return py::array_t<cdouble>(arr);
   // case py::detail::npy_api::NPY_CLONGDOUBLE_:
-  //   return py::array_t<clongdouble>(arr);
+  //   return py::array_t<cldouble>(arr);
   default:
     return ReturnState::INVALID_ALPHA_TYPE;
   }
@@ -455,3 +456,5 @@ PYBIND11_MODULE(_oputils, m) {
 
   m.def("csr_matvec", &csr_matvec);
 }
+
+/**/
