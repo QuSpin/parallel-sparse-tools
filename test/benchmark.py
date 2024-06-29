@@ -26,10 +26,8 @@ def apply_csr(A, alpha, x, y):
     assert status == ReturnState.SUCCESS
 
 
-@pytest.mark.benchmark(
-    group="csr-matvec",
-)
-def test_csr(benchmark):
+@pytest.mark.parametrize("size", [100, 1000, 10000, 100000])
+def test_csr(benchmark, size):
 
-    args = setup_benchmark(1000)
+    args = setup_benchmark(size)
     benchmark(apply_csr, *args)
