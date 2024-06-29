@@ -5,14 +5,21 @@ import numpy as np
 import os
 import sys
 from typing import List
+import tomllib
 
-import numpy as np
+
+with open("pyproject.toml", "rb") as f:
+    pyproject = tomllib.load(f)
 
 
-__version__ = "0.2.0"
-
-if os.environ.get("COVERAGE", False) and sys.platform in ["win32", "cygwin", "win64", "darwin"]:
+if os.environ.get("COVERAGE", False) and sys.platform in [
+    "win32",
+    "cygwin",
+    "win64",
+    "darwin",
+]:
     raise ValueError("Coverage is not supported on Windows or macOS")
+
 
 def extra_compile_args() -> List[str]:
     if sys.platform in ["win32", "cygwin", "win64"]:
@@ -20,9 +27,6 @@ def extra_compile_args() -> List[str]:
     elif sys.platform in ["darwin"]:
         extra_compile_args = [
             "-mmacosx-version-min=10.15",
-            "-DLLVM_ENABLE_PROJECTS",
-            "-Xpreprocessor",
-            "-fopenmp-version=50"
             "-fopenmp",
         ]
     else:
@@ -30,12 +34,12 @@ def extra_compile_args() -> List[str]:
 
     if os.environ.get("COVERAGE", False):
         extra_compile_args += [
-            '--coverage', 
-            '-fno-inline', 
-            '-fno-inline-small-functions', 
-            '-fno-default-inline', 
-            '-O0'
-        ]        
+            "--coverage",
+            "-fno-inline",
+            "-fno-inline-small-functions",
+            "-fno-default-inline",
+            "-O0",
+        ]
 
     return extra_compile_args
 
@@ -45,9 +49,6 @@ def extra_link_args() -> List[str]:
         extra_link_args = ["/openmp"]
     if sys.platform in ["darwin"]:
         extra_link_args = [
-            "-DLLVM_ENABLE_PROJECTS",
-            "-Xpreprocessor",
-            "-fopenmp-version=50"
             "-fopenmp",
         ]
     else:
@@ -55,22 +56,22 @@ def extra_link_args() -> List[str]:
 
     if os.environ.get("COVERAGE", False):
 
-        
         extra_link_args += ["--coverage"]
 
     return extra_link_args
 
 
-
 ext_modules = [
     Pybind11Extension(
-        "parallel_sparse_tools.matvec._oputils",
-        [os.path.join("src", "parallel_sparse_tools", "matvec", "_oputils.cxx")],
+        "parallel_sparse_tools.matvec._matvec_impl",
+        sources=[
+            os.path.join("src", "parallel_sparse_tools", "matvec", "_matvec_impl.cxx")
+        ],
         define_macros=[
-            ("VERSION_INFO", __version__),
+            ("VERSION_INFO", pyproject["project"]["version"]),
         ],
         include_dirs=[
-            os.path.join("src", "parallel_sparse_tools", "matvec", "_oputils"),
+            os.path.join("src", "parallel_sparse_tools", "matvec", "include"),
             np.get_include(),
         ],
         extra_compile_args=extra_compile_args(),

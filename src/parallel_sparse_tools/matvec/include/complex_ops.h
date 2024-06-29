@@ -35,8 +35,8 @@ public:
   _complex_wrapper conj() const {
     return _complex_wrapper(npy_type::_Val[0], -npy_type::_Val[1]);
   }
-  inline c_type real() const { return npy_type::_Val[0];}
-  inline c_type imag() const { return npy_type::_Val[1];}
+  inline c_type real() const { return npy_type::_Val[0]; }
+  inline c_type imag() const { return npy_type::_Val[1]; }
   /* in-place operators */
   _complex_wrapper &operator+=(const _complex_wrapper &B) {
     npy_type::_Val[0] += B.real();
@@ -50,13 +50,15 @@ public:
   }
   _complex_wrapper &operator*=(const _complex_wrapper &B) {
     c_type temp = npy_type::_Val[0] * B.real() - npy_type::_Val[1] * B.imag();
-    npy_type::_Val[1] = npy_type::_Val[0] * B.imag() + npy_type::_Val[1] * B.real();
+    npy_type::_Val[1] =
+        npy_type::_Val[0] * B.imag() + npy_type::_Val[1] * B.real();
     npy_type::_Val[0] = temp;
     return (*this);
   }
   _complex_wrapper &operator/=(const _complex_wrapper &B) {
     c_type denom = 1.0 / (B.real() * B.real() + B.imag() * B.imag());
-    c_type temp = (npy_type::_Val[0] * B.real() + npy_type::_Val[1] * B.imag()) * denom;
+    c_type temp =
+        (npy_type::_Val[0] * B.real() + npy_type::_Val[1] * B.imag()) * denom;
     npy_type::_Val[1] =
         (npy_type::_Val[1] * B.real() - npy_type::_Val[0] * B.imag()) * denom;
     npy_type::_Val[0] = temp;
@@ -71,19 +73,19 @@ public:
   }
   bool operator<(const _complex_wrapper &B) const {
     return (npy_type::_Val[0] == B.real() ? npy_type::_Val[1] < B.imag()
-                                     : npy_type::_Val[0] < B.real());
+                                          : npy_type::_Val[0] < B.real());
   }
   bool operator>(const _complex_wrapper &B) const {
     return (npy_type::_Val[0] == B.real() ? npy_type::_Val[1] > B.imag()
-                                     : npy_type::_Val[0] > B.real());
+                                          : npy_type::_Val[0] > B.real());
   }
   bool operator<=(const _complex_wrapper &B) const {
     return (npy_type::_Val[0] == B.real() ? npy_type::_Val[1] <= B.imag()
-                                     : npy_type::_Val[0] <= B.real());
+                                          : npy_type::_Val[0] <= B.real());
   }
   bool operator>=(const _complex_wrapper &B) const {
     return (npy_type::_Val[0] == B.real() ? npy_type::_Val[1] >= B.imag()
-                                     : npy_type::_Val[0] >= B.real());
+                                          : npy_type::_Val[0] >= B.real());
   }
   template <class T> bool operator==(const T &B) const {
     return npy_type::_Val[0] == B && npy_type::_Val[1] == T(0);
@@ -92,16 +94,20 @@ public:
     return npy_type::_Val[0] != B || npy_type::_Val[1] != T(0);
   }
   template <class T> bool operator<(const T &B) const {
-    return (npy_type::_Val[0] == B ? npy_type::_Val[1] < T(0) : npy_type::_Val[0] < B);
+    return (npy_type::_Val[0] == B ? npy_type::_Val[1] < T(0)
+                                   : npy_type::_Val[0] < B);
   }
   template <class T> bool operator>(const T &B) const {
-    return (npy_type::_Val[0] == B ? npy_type::_Val[1] > T(0) : npy_type::_Val[0] > B);
+    return (npy_type::_Val[0] == B ? npy_type::_Val[1] > T(0)
+                                   : npy_type::_Val[0] > B);
   }
   template <class T> bool operator<=(const T &B) const {
-    return (npy_type::_Val[0] == B ? npy_type::_Val[1] <= T(0) : npy_type::_Val[0] <= B);
+    return (npy_type::_Val[0] == B ? npy_type::_Val[1] <= T(0)
+                                   : npy_type::_Val[0] <= B);
   }
   template <class T> bool operator>=(const T &B) const {
-    return (npy_type::_Val[0] == B ? npy_type::_Val[1] >= T(0) : npy_type::_Val[0] >= B);
+    return (npy_type::_Val[0] == B ? npy_type::_Val[1] >= T(0)
+                                   : npy_type::_Val[0] >= B);
   }
   template <class _c_type, typename _npy_type>
   _complex_wrapper &operator=(const _complex_wrapper<_c_type, _npy_type> &B) {
@@ -198,20 +204,23 @@ complex_wrapper<result_type_t<U, T>> operator/(const complex_wrapper<T> &A,
 template <class U, class T>
 complex_wrapper<result_type_t<U, T>> add(const complex_wrapper<U> &B,
                                          const complex_wrapper<T> &A) {
-  return complex_wrapper<result_type_t<U, T>>(B.real() + A.real(), B.imag() + A.imag());
+  return complex_wrapper<result_type_t<U, T>>(B.real() + A.real(),
+                                              B.imag() + A.imag());
 }
 
 template <class U, class T>
 complex_wrapper<result_type_t<U, T>> sub(const complex_wrapper<U> &B,
                                          const complex_wrapper<T> &A) {
-  return complex_wrapper<result_type_t<U, T>>(B.real() - A.real(), B.imag() - A.imag());
+  return complex_wrapper<result_type_t<U, T>>(B.real() - A.real(),
+                                              B.imag() - A.imag());
 }
 
 template <class T, class U>
 complex_wrapper<result_type_t<U, T>> mul(const complex_wrapper<U> &B,
                                          const complex_wrapper<T> &A) {
   return complex_wrapper<result_type_t<U, T>>(
-      B.real() * A.real() - B.imag() * A.imag(), B.imag() * A.real() + B.real() * A.imag());
+      B.real() * A.real() - B.imag() * A.imag(),
+      B.imag() * A.real() + B.real() * A.imag());
 }
 
 template <class T, class U>

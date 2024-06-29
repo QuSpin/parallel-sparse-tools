@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools", "wheel", "pybind11", "numpy"]
+requires = ["setuptools", "wheel", "pybind11", "numpy>=2.0.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -80,4 +80,5 @@ archs = ["native"]
 [tool.pdm.dev-dependencies]
 dev = [
     "pre-commit>=3.7.1",
+    "pytest-benchmark>=4.0.0",
 ]
