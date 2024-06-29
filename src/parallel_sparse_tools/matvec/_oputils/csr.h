@@ -117,7 +117,7 @@ inline void csr_matvec_omp_contig(const bool overwrite_out, const I n_row,
                                   const I indptr[], const I indices[],
                                   const T1 data[], const T2 a, const T3 in[],
                                   T3 out[]) {
-  const int nthread = omp_get_mdata_threads();
+  const int nthread = omp_get_max_threads();
   std::vector<I> rco_vec(nthread);
   std::vector<T3> vco_vec(nthread);
   I *rco = &rco_vec[0];
@@ -136,7 +136,7 @@ inline void csr_matvec_omp_strided(const bool overwrite_out, const I n_row,
                                    const T1 data[], const T2 a,
                                    const npy_intp in_stride, const T3 in[],
                                    const npy_intp out_stride, T3 out[]) {
-  const int nthread = omp_get_mdata_threads();
+  const int nthread = omp_get_max_threads();
 
   std::vector<I> rco_vec(nthread);
   std::vector<T3> vco_vec(nthread);
