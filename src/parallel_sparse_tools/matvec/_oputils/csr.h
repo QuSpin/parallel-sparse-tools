@@ -6,6 +6,7 @@
 #include <iomanip>
 #include <iostream>
 #include <numpy/arrayobject.h>
+#include <vector>
 
 // void write(const float &a) { std::cout << a; }
 
@@ -122,7 +123,7 @@ inline void csr_matvec_omp_contig(const bool overwrite_out, const I n_row,
   std::vector<T3> vco_vec(nthread);
   I *rco = &rco_vec[0];
   T3 *vco = &vco_vec[0];
-#pragma omp parallel shared(indptr, indices, data, in, rco, vco, y)            \
+#pragma omp parallel shared(indptr, indices, data, in, rco, vco, out)          \
     firstprivate(overwrite_out, n_row)
   {
     csrmv_merge(overwrite_out, n_row, indptr, indices, data, a, in, rco, vco,
