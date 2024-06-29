@@ -76,7 +76,7 @@ using dense_array =
     std::variant<array_wrapper<float>, array_wrapper<double>,
                  array_wrapper<cfloat>, array_wrapper<cdouble>, ReturnState>;
 
-using scalararrray = dense_array;
+using scalar_array = dense_array;
 
 data_array get_data_array(py::array &arr) {
   const int num = arr.dtype().num();

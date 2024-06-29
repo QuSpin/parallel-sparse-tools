@@ -152,10 +152,9 @@ inline void csr_matvecs_omp_strided(const bool overwrite_out, const I n_row,
                                     const npy_intp in_stride_col, const T3 in[],
                                     const npy_intp out_stride_row,
                                     const npy_intp out_stride_col, T3 out[]) {
-  std::vector<I> rco_vec(nthread);
-  std::vector<T3> vco_vec(nthread);
-  I *rco = &rco_vec[0];
-  T3 *vco = &vco_vec[0];
+  csr_matvecs_noomp_strided(overwrite_out, n_row, n_vecs, indptr, indices, data,
+                            a, in_stride_row, in_stride_col, in, out_stride_row,
+                            out_stride_col, out);
 }
 
 #else
@@ -347,86 +346,6 @@ csr_matvecs_omp(const bool overwrite_out, const I n_row, const I n_col,
   }
 }
 
-index_array get_indices_array(py::array &arr) {
-  index_array result = get_index_array(arr);
-  return (std::holds_alternative<ReturnState>(result)
-              ? ReturnState::INVALID_INDICES_TYPE
-              : result);
-}
-
-index_array get_indptr_array(py::array &arr) {
-  index_array result = get_index_array(arr);
-  return (std::holds_alternative<ReturnState>(result)
-              ? ReturnState::INVALID_INDPTR_TYPE
-              : result);
-}
-
-dense_array get_in_array(py::array &arr) {
-  dense_array result = get_dense_array(arr);
-  return (std::holds_alternative<ReturnState>(result)
-              ? ReturnState::INVALID_IN_TYPE
-              : result);
-}
-
-dense_array get_out_array(py::array &arr) {
-  dense_array result = get_dense_array(arr);
-  return (std::holds_alternative<ReturnState>(result)
-              ? ReturnState::INVALID_OUT_TYPE
-              : result);
-}
-
-scalararrray get_scalar_array(py::array &arr) {
-  dense_array result = get_dense_array(arr);
-  return (std::holds_alternative<ReturnState>(result)
-              ? ReturnState::INVALID_ALPHA_TYPE
-              : result);
-}
-
-template <typename index_t>
-ReturnState check_indptr(const npy_intp n_row_or_col,
-                         const array_wrapper<index_t> &indptr) {
-  if (indptr.ndim() != 1) {
-    return ReturnState::INVALID_INDPTR_NDIM;
-  }
-  if (indptr.size() != n_row_or_col + 1) {
-    return ReturnState::INVALID_INDPTR_SIZE;
-  }
-  if (!indptr.is_c_contiguous()) {
-    return ReturnState::INDPTR_NOT_C_CONTIGUOUS;
-  }
-  return ReturnState::SUCCESS;
-}
-
-template <typename index_t>
-ReturnState check_indices(const array_wrapper<index_t> &indices) {
-  if (indices.ndim() != 1) {
-    return ReturnState::INVALID_INDICES_NDIM;
-  }
-  if (!indices.is_c_contiguous()) {
-    return ReturnState::INDICES_NOT_C_CONTIGUOUS;
-  }
-  return ReturnState::SUCCESS;
-}
-
-template <typename data_t>
-ReturnState check_data(const array_wrapper<data_t> &data) {
-  if (data.ndim() != 1) {
-    return ReturnState::INVALID_DATA_NDIM;
-  }
-  if (!data.is_c_contiguous()) {
-    return ReturnState::DATA_NOT_C_CONTIGUOUS;
-  }
-  return ReturnState::SUCCESS;
-}
-
-template <typename alpha_t>
-ReturnState check_alpha(const array_wrapper<alpha_t> &alpha) {
-  if (alpha.ndim() != 0) {
-    return ReturnState::INVALID_ALPHA_NDIM;
-  }
-  return ReturnState::SUCCESS;
-}
-
 template <typename index_t, typename data_t, typename alpha_t, typename in_t>
 ReturnState check_csr_arrays(const npy_intp n_col, const npy_intp n_row,
                              const array_wrapper<index_t> &indices,
@@ -464,7 +383,7 @@ ReturnState csr_matvec(const bool overwrite, const npy_intp n_col,
                        py::array py_indptr, py::array py_indices,
                        py::array py_data, py::array py_in, py::array py_out) {
 
-  scalararrray alpha = get_scalar_array(py_alpha);
+  scalar_array alpha = get_scalar_array(py_alpha);
   index_array indptr = get_indptr_array(py_indptr);
   index_array indices = get_indices_array(py_indices);
   data_array data = get_data_array(py_data);
