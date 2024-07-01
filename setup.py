@@ -63,10 +63,8 @@ def extra_link_args() -> List[str]:
 
 ext_modules = [
     Pybind11Extension(
-        "parallel_sparse_tools.matvec._matvec_impl",
-        sources=[
-            os.path.join("src", "parallel_sparse_tools", "matvec", "_matvec_impl.cxx")
-        ],
+        "parallel_sparse_tools.matvec._ext",
+        sources=[os.path.join("src", "parallel_sparse_tools", "matvec", "_ext.cxx")],
         define_macros=[
             ("VERSION_INFO", pyproject["project"]["version"]),
         ],
