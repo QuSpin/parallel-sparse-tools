@@ -1,4 +1,3 @@
-import logging
 import tomlkit
 from packaging.version import Version
 import os
@@ -42,9 +41,9 @@ def main():
     repo = git.Repo()
 
     branch = repo.git.branch()
-    repo.git.stash()
 
     try:
+        repo.git.stash()
         if branch != "main":
             repo.git.checkout("main")
             repo.git.pull()
@@ -53,9 +52,13 @@ def main():
 
         exec_udpate(repo, args)
     finally:
-        logging.info("Restoring branch")
-        repo.git.checkout(branch)
+        repo.git.checkout(".", force=True)
+
         if branch != "main":
             repo.git.checkout(branch)
 
         repo.git.stash("pop")
+
+
+if __name__ == "__main__":
+    main()
