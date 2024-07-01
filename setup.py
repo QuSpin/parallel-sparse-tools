@@ -5,11 +5,11 @@ import numpy as np
 import os
 import sys
 from typing import List
-import tomllib
+import toml
 
 
 with open("pyproject.toml", "rb") as f:
-    pyproject = tomllib.load(f)
+    pyproject = toml.load(f)
 
 
 if os.environ.get("COVERAGE", False) and sys.platform in [
