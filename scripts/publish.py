@@ -37,9 +37,18 @@ def exec_udpate(repo, args):
         raise NotImplementedError("Publishing is not implemented yet")
 
 
+def get_branch(repo):
+    output = repo.git.branch()
+    for branch in output.split("\n"):
+        if branch.startswith("*"):
+            return branch[2:]
+
+    raise ValueError("No branch found")
+
+
 def main():
     repo = git.Repo()
-    branch = repo.git.branch()
+    branch = get_branch(repo)
 
     try:
         repo.git.stash()
@@ -51,10 +60,8 @@ def main():
 
         exec_udpate(repo, args)
     finally:
-        repo.git.checkout(".", force=True)
-
         if branch != "main":
-            repo.git.checkout(branch)
+            repo.git.checkout(branch, force=True)
 
         repo.git.stash("pop")
 
