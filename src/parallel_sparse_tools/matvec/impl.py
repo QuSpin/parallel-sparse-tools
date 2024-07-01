@@ -74,6 +74,9 @@ def matvec(
     a: Number = 1.0,
     overwrite_output: bool = True,
 ):
+    if not isinstance(A, sp.spmatrix):
+        raise ValueError("A must be a scipy.sparse.spmatrix")
+
     a = _cast_scalar(a)
 
     if py_output is None:
