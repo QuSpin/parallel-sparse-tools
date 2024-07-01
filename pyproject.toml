@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools", "wheel", "pybind11", "numpy>=2.0.0"]
+requires = ["setuptools", "wheel", "pybind11", "numpy>=2.0.0", "tomllib"]
 build-backend = "setuptools.build_meta"
 
 [project]
