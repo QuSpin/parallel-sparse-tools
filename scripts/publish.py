@@ -1,7 +1,9 @@
+import logging
 import tomlkit
 from packaging.version import Version
 import os
 import argparse
+import git
 
 
 def write_version(version: Version):
@@ -27,7 +29,33 @@ parser.add_argument(
 )
 
 
-args = parser.parse_args()
+def exec_udpate(repo, args):
+    version = Version(args.version)
 
-version = Version(args.version)
-write_version(version)
+    write_version(version)
+
+    if not args.dry_run:
+        raise NotImplementedError("Publishing is not implemented yet")
+
+
+def main():
+    repo = git.Repo()
+
+    branch = repo.git.branch()
+    repo.git.stash()
+
+    try:
+        if branch != "main":
+            repo.git.checkout("main")
+            repo.git.pull()
+
+        args = parser.parse_args()
+
+        exec_udpate(repo, args)
+    finally:
+        logging.info("Restoring branch")
+        repo.git.checkout(branch)
+        if branch != "main":
+            repo.git.checkout(branch)
+
+        repo.git.stash("pop")
