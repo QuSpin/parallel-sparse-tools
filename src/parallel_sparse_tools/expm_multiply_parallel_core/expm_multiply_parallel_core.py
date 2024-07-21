@@ -334,7 +334,7 @@ class LazyOperatorNormInfo:
         if p not in self._d:
             matvec = lambda v: self._a * (self._A.dot(v) - self._mu * v)
             rmatvec = lambda v: _np.conj(self._a) * (
-                self._A.H.dot(v) - _np.conj(self._mu) * v
+                self._A.transpose().conj().dot(v) - _np.conj(self._mu) * v
             )
             LO = LinearOperator(
                 self._A.shape, dtype=self._dtype, matvec=matvec, rmatvec=rmatvec
