@@ -17,9 +17,10 @@ def extra_compile_args() -> List[str]:
             "-Xpreprocessor",
             "-fopenmp-version=50"
             "-fopenmp",
+            "--std=c++11",
         ]
     else:
-        extra_compile_args = ["-fopenmp"]
+        extra_compile_args = ["-fopenmp", "--std=c++11"]
 
     if os.environ.get("COVERAGE", False):
         if sys.platform in ["win32", "cygwin", "win64", "darwin"]:
