@@ -31,7 +31,7 @@ void inline atomic_add(std::complex<T> &y,const std::complex<T> &aa){
 }
 
 
-void inline atomic_add(npy_cdouble_wrapper &y,const npy_cdouble_wrapper &aa){
+void inline atomic_add(cdouble &y,const cdouble &aa){
     double * y_v = reinterpret_cast<double*>(&y);
     const double * aa_v = reinterpret_cast<const double*>(&aa);
 
@@ -42,7 +42,7 @@ void inline atomic_add(npy_cdouble_wrapper &y,const npy_cdouble_wrapper &aa){
 }
 
 
-void inline atomic_add(npy_cfloat_wrapper &y,const npy_cfloat_wrapper &aa){
+void inline atomic_add(cfloat &y,const cfloat &aa){
     float * y_v = reinterpret_cast<float*>(&y);
     const float * aa_v = reinterpret_cast<const float*>(&aa);
 

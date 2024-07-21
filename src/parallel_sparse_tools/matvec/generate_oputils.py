@@ -7,8 +7,8 @@ import os
 numpy_ctypes = {
     float32: "float",
     float64: "double",
-    complex64: "npy_cfloat_wrapper",
-    complex128: "npy_cdouble_wrapper",
+    complex64: "cfloat",
+    complex128: "cdouble",
     int32: "npy_int32",
     int64: "npy_int64",
     int8: "npy_int8",

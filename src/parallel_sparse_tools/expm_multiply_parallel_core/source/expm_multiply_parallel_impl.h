@@ -83,103 +83,103 @@ void expm_multiply_impl(const int switch_num,
 {
     switch(switch_num){
 		case 0 :
-			expm_multiply<npy_int32,npy_cdouble_wrapper,double,npy_cdouble_wrapper>((const npy_int32)n,(const npy_int32*)Ap,(const npy_int32*)Aj,(const npy_cdouble_wrapper*)Ax,s,m_star,*(const double*)tol,*(const npy_cdouble_wrapper*)mu,*(const npy_cdouble_wrapper*)a,(npy_cdouble_wrapper*)F,(npy_cdouble_wrapper*)work);
+			expm_multiply<npy_int32,cdouble,double,cdouble>((const npy_int32)n,(const npy_int32*)Ap,(const npy_int32*)Aj,(const cdouble*)Ax,s,m_star,*(const double*)tol,*(const cdouble*)mu,*(const cdouble*)a,(cdouble*)F,(cdouble*)work);
 			break;
 		case 1 :
-			expm_multiply<npy_int32,double,double,npy_cdouble_wrapper>((const npy_int32)n,(const npy_int32*)Ap,(const npy_int32*)Aj,(const double*)Ax,s,m_star,*(const double*)tol,*(const npy_cdouble_wrapper*)mu,*(const npy_cdouble_wrapper*)a,(npy_cdouble_wrapper*)F,(npy_cdouble_wrapper*)work);
+			expm_multiply<npy_int32,double,double,cdouble>((const npy_int32)n,(const npy_int32*)Ap,(const npy_int32*)Aj,(const double*)Ax,s,m_star,*(const double*)tol,*(const cdouble*)mu,*(const cdouble*)a,(cdouble*)F,(cdouble*)work);
 			break;
 		case 2 :
 			expm_multiply<npy_int32,double,double,double>((const npy_int32)n,(const npy_int32*)Ap,(const npy_int32*)Aj,(const double*)Ax,s,m_star,*(const double*)tol,*(const double*)mu,*(const double*)a,(double*)F,(double*)work);
 			break;
 		case 3 :
-			expm_multiply<npy_int32,npy_cfloat_wrapper,double,npy_cdouble_wrapper>((const npy_int32)n,(const npy_int32*)Ap,(const npy_int32*)Aj,(const npy_cfloat_wrapper*)Ax,s,m_star,*(const double*)tol,*(const npy_cdouble_wrapper*)mu,*(const npy_cdouble_wrapper*)a,(npy_cdouble_wrapper*)F,(npy_cdouble_wrapper*)work);
+			expm_multiply<npy_int32,cfloat,double,cdouble>((const npy_int32)n,(const npy_int32*)Ap,(const npy_int32*)Aj,(const cfloat*)Ax,s,m_star,*(const double*)tol,*(const cdouble*)mu,*(const cdouble*)a,(cdouble*)F,(cdouble*)work);
 			break;
 		case 4 :
-			expm_multiply<npy_int32,npy_cfloat_wrapper,float,npy_cfloat_wrapper>((const npy_int32)n,(const npy_int32*)Ap,(const npy_int32*)Aj,(const npy_cfloat_wrapper*)Ax,s,m_star,*(const float*)tol,*(const npy_cfloat_wrapper*)mu,*(const npy_cfloat_wrapper*)a,(npy_cfloat_wrapper*)F,(npy_cfloat_wrapper*)work);
+			expm_multiply<npy_int32,cfloat,float,cfloat>((const npy_int32)n,(const npy_int32*)Ap,(const npy_int32*)Aj,(const cfloat*)Ax,s,m_star,*(const float*)tol,*(const cfloat*)mu,*(const cfloat*)a,(cfloat*)F,(cfloat*)work);
 			break;
 		case 5 :
-			expm_multiply<npy_int32,float,double,npy_cdouble_wrapper>((const npy_int32)n,(const npy_int32*)Ap,(const npy_int32*)Aj,(const float*)Ax,s,m_star,*(const double*)tol,*(const npy_cdouble_wrapper*)mu,*(const npy_cdouble_wrapper*)a,(npy_cdouble_wrapper*)F,(npy_cdouble_wrapper*)work);
+			expm_multiply<npy_int32,float,double,cdouble>((const npy_int32)n,(const npy_int32*)Ap,(const npy_int32*)Aj,(const float*)Ax,s,m_star,*(const double*)tol,*(const cdouble*)mu,*(const cdouble*)a,(cdouble*)F,(cdouble*)work);
 			break;
 		case 6 :
 			expm_multiply<npy_int32,float,double,double>((const npy_int32)n,(const npy_int32*)Ap,(const npy_int32*)Aj,(const float*)Ax,s,m_star,*(const double*)tol,*(const double*)mu,*(const double*)a,(double*)F,(double*)work);
 			break;
 		case 7 :
-			expm_multiply<npy_int32,float,float,npy_cfloat_wrapper>((const npy_int32)n,(const npy_int32*)Ap,(const npy_int32*)Aj,(const float*)Ax,s,m_star,*(const float*)tol,*(const npy_cfloat_wrapper*)mu,*(const npy_cfloat_wrapper*)a,(npy_cfloat_wrapper*)F,(npy_cfloat_wrapper*)work);
+			expm_multiply<npy_int32,float,float,cfloat>((const npy_int32)n,(const npy_int32*)Ap,(const npy_int32*)Aj,(const float*)Ax,s,m_star,*(const float*)tol,*(const cfloat*)mu,*(const cfloat*)a,(cfloat*)F,(cfloat*)work);
 			break;
 		case 8 :
 			expm_multiply<npy_int32,float,float,float>((const npy_int32)n,(const npy_int32*)Ap,(const npy_int32*)Aj,(const float*)Ax,s,m_star,*(const float*)tol,*(const float*)mu,*(const float*)a,(float*)F,(float*)work);
 			break;
 		case 9 :
-			expm_multiply<npy_int32,npy_int16,double,npy_cdouble_wrapper>((const npy_int32)n,(const npy_int32*)Ap,(const npy_int32*)Aj,(const npy_int16*)Ax,s,m_star,*(const double*)tol,*(const npy_cdouble_wrapper*)mu,*(const npy_cdouble_wrapper*)a,(npy_cdouble_wrapper*)F,(npy_cdouble_wrapper*)work);
+			expm_multiply<npy_int32,npy_int16,double,cdouble>((const npy_int32)n,(const npy_int32*)Ap,(const npy_int32*)Aj,(const npy_int16*)Ax,s,m_star,*(const double*)tol,*(const cdouble*)mu,*(const cdouble*)a,(cdouble*)F,(cdouble*)work);
 			break;
 		case 10 :
 			expm_multiply<npy_int32,npy_int16,double,double>((const npy_int32)n,(const npy_int32*)Ap,(const npy_int32*)Aj,(const npy_int16*)Ax,s,m_star,*(const double*)tol,*(const double*)mu,*(const double*)a,(double*)F,(double*)work);
 			break;
 		case 11 :
-			expm_multiply<npy_int32,npy_int16,float,npy_cfloat_wrapper>((const npy_int32)n,(const npy_int32*)Ap,(const npy_int32*)Aj,(const npy_int16*)Ax,s,m_star,*(const float*)tol,*(const npy_cfloat_wrapper*)mu,*(const npy_cfloat_wrapper*)a,(npy_cfloat_wrapper*)F,(npy_cfloat_wrapper*)work);
+			expm_multiply<npy_int32,npy_int16,float,cfloat>((const npy_int32)n,(const npy_int32*)Ap,(const npy_int32*)Aj,(const npy_int16*)Ax,s,m_star,*(const float*)tol,*(const cfloat*)mu,*(const cfloat*)a,(cfloat*)F,(cfloat*)work);
 			break;
 		case 12 :
 			expm_multiply<npy_int32,npy_int16,float,float>((const npy_int32)n,(const npy_int32*)Ap,(const npy_int32*)Aj,(const npy_int16*)Ax,s,m_star,*(const float*)tol,*(const float*)mu,*(const float*)a,(float*)F,(float*)work);
 			break;
 		case 13 :
-			expm_multiply<npy_int32,npy_int8,double,npy_cdouble_wrapper>((const npy_int32)n,(const npy_int32*)Ap,(const npy_int32*)Aj,(const npy_int8*)Ax,s,m_star,*(const double*)tol,*(const npy_cdouble_wrapper*)mu,*(const npy_cdouble_wrapper*)a,(npy_cdouble_wrapper*)F,(npy_cdouble_wrapper*)work);
+			expm_multiply<npy_int32,npy_int8,double,cdouble>((const npy_int32)n,(const npy_int32*)Ap,(const npy_int32*)Aj,(const npy_int8*)Ax,s,m_star,*(const double*)tol,*(const cdouble*)mu,*(const cdouble*)a,(cdouble*)F,(cdouble*)work);
 			break;
 		case 14 :
 			expm_multiply<npy_int32,npy_int8,double,double>((const npy_int32)n,(const npy_int32*)Ap,(const npy_int32*)Aj,(const npy_int8*)Ax,s,m_star,*(const double*)tol,*(const double*)mu,*(const double*)a,(double*)F,(double*)work);
 			break;
 		case 15 :
-			expm_multiply<npy_int32,npy_int8,float,npy_cfloat_wrapper>((const npy_int32)n,(const npy_int32*)Ap,(const npy_int32*)Aj,(const npy_int8*)Ax,s,m_star,*(const float*)tol,*(const npy_cfloat_wrapper*)mu,*(const npy_cfloat_wrapper*)a,(npy_cfloat_wrapper*)F,(npy_cfloat_wrapper*)work);
+			expm_multiply<npy_int32,npy_int8,float,cfloat>((const npy_int32)n,(const npy_int32*)Ap,(const npy_int32*)Aj,(const npy_int8*)Ax,s,m_star,*(const float*)tol,*(const cfloat*)mu,*(const cfloat*)a,(cfloat*)F,(cfloat*)work);
 			break;
 		case 16 :
 			expm_multiply<npy_int32,npy_int8,float,float>((const npy_int32)n,(const npy_int32*)Ap,(const npy_int32*)Aj,(const npy_int8*)Ax,s,m_star,*(const float*)tol,*(const float*)mu,*(const float*)a,(float*)F,(float*)work);
 			break;
 		case 17 :
-			expm_multiply<npy_int64,npy_cdouble_wrapper,double,npy_cdouble_wrapper>((const npy_int64)n,(const npy_int64*)Ap,(const npy_int64*)Aj,(const npy_cdouble_wrapper*)Ax,s,m_star,*(const double*)tol,*(const npy_cdouble_wrapper*)mu,*(const npy_cdouble_wrapper*)a,(npy_cdouble_wrapper*)F,(npy_cdouble_wrapper*)work);
+			expm_multiply<npy_int64,cdouble,double,cdouble>((const npy_int64)n,(const npy_int64*)Ap,(const npy_int64*)Aj,(const cdouble*)Ax,s,m_star,*(const double*)tol,*(const cdouble*)mu,*(const cdouble*)a,(cdouble*)F,(cdouble*)work);
 			break;
 		case 18 :
-			expm_multiply<npy_int64,double,double,npy_cdouble_wrapper>((const npy_int64)n,(const npy_int64*)Ap,(const npy_int64*)Aj,(const double*)Ax,s,m_star,*(const double*)tol,*(const npy_cdouble_wrapper*)mu,*(const npy_cdouble_wrapper*)a,(npy_cdouble_wrapper*)F,(npy_cdouble_wrapper*)work);
+			expm_multiply<npy_int64,double,double,cdouble>((const npy_int64)n,(const npy_int64*)Ap,(const npy_int64*)Aj,(const double*)Ax,s,m_star,*(const double*)tol,*(const cdouble*)mu,*(const cdouble*)a,(cdouble*)F,(cdouble*)work);
 			break;
 		case 19 :
 			expm_multiply<npy_int64,double,double,double>((const npy_int64)n,(const npy_int64*)Ap,(const npy_int64*)Aj,(const double*)Ax,s,m_star,*(const double*)tol,*(const double*)mu,*(const double*)a,(double*)F,(double*)work);
 			break;
 		case 20 :
-			expm_multiply<npy_int64,npy_cfloat_wrapper,double,npy_cdouble_wrapper>((const npy_int64)n,(const npy_int64*)Ap,(const npy_int64*)Aj,(const npy_cfloat_wrapper*)Ax,s,m_star,*(const double*)tol,*(const npy_cdouble_wrapper*)mu,*(const npy_cdouble_wrapper*)a,(npy_cdouble_wrapper*)F,(npy_cdouble_wrapper*)work);
+			expm_multiply<npy_int64,cfloat,double,cdouble>((const npy_int64)n,(const npy_int64*)Ap,(const npy_int64*)Aj,(const cfloat*)Ax,s,m_star,*(const double*)tol,*(const cdouble*)mu,*(const cdouble*)a,(cdouble*)F,(cdouble*)work);
 			break;
 		case 21 :
-			expm_multiply<npy_int64,npy_cfloat_wrapper,float,npy_cfloat_wrapper>((const npy_int64)n,(const npy_int64*)Ap,(const npy_int64*)Aj,(const npy_cfloat_wrapper*)Ax,s,m_star,*(const float*)tol,*(const npy_cfloat_wrapper*)mu,*(const npy_cfloat_wrapper*)a,(npy_cfloat_wrapper*)F,(npy_cfloat_wrapper*)work);
+			expm_multiply<npy_int64,cfloat,float,cfloat>((const npy_int64)n,(const npy_int64*)Ap,(const npy_int64*)Aj,(const cfloat*)Ax,s,m_star,*(const float*)tol,*(const cfloat*)mu,*(const cfloat*)a,(cfloat*)F,(cfloat*)work);
 			break;
 		case 22 :
-			expm_multiply<npy_int64,float,double,npy_cdouble_wrapper>((const npy_int64)n,(const npy_int64*)Ap,(const npy_int64*)Aj,(const float*)Ax,s,m_star,*(const double*)tol,*(const npy_cdouble_wrapper*)mu,*(const npy_cdouble_wrapper*)a,(npy_cdouble_wrapper*)F,(npy_cdouble_wrapper*)work);
+			expm_multiply<npy_int64,float,double,cdouble>((const npy_int64)n,(const npy_int64*)Ap,(const npy_int64*)Aj,(const float*)Ax,s,m_star,*(const double*)tol,*(const cdouble*)mu,*(const cdouble*)a,(cdouble*)F,(cdouble*)work);
 			break;
 		case 23 :
 			expm_multiply<npy_int64,float,double,double>((const npy_int64)n,(const npy_int64*)Ap,(const npy_int64*)Aj,(const float*)Ax,s,m_star,*(const double*)tol,*(const double*)mu,*(const double*)a,(double*)F,(double*)work);
 			break;
 		case 24 :
-			expm_multiply<npy_int64,float,float,npy_cfloat_wrapper>((const npy_int64)n,(const npy_int64*)Ap,(const npy_int64*)Aj,(const float*)Ax,s,m_star,*(const float*)tol,*(const npy_cfloat_wrapper*)mu,*(const npy_cfloat_wrapper*)a,(npy_cfloat_wrapper*)F,(npy_cfloat_wrapper*)work);
+			expm_multiply<npy_int64,float,float,cfloat>((const npy_int64)n,(const npy_int64*)Ap,(const npy_int64*)Aj,(const float*)Ax,s,m_star,*(const float*)tol,*(const cfloat*)mu,*(const cfloat*)a,(cfloat*)F,(cfloat*)work);
 			break;
 		case 25 :
 			expm_multiply<npy_int64,float,float,float>((const npy_int64)n,(const npy_int64*)Ap,(const npy_int64*)Aj,(const float*)Ax,s,m_star,*(const float*)tol,*(const float*)mu,*(const float*)a,(float*)F,(float*)work);
 			break;
 		case 26 :
-			expm_multiply<npy_int64,npy_int16,double,npy_cdouble_wrapper>((const npy_int64)n,(const npy_int64*)Ap,(const npy_int64*)Aj,(const npy_int16*)Ax,s,m_star,*(const double*)tol,*(const npy_cdouble_wrapper*)mu,*(const npy_cdouble_wrapper*)a,(npy_cdouble_wrapper*)F,(npy_cdouble_wrapper*)work);
+			expm_multiply<npy_int64,npy_int16,double,cdouble>((const npy_int64)n,(const npy_int64*)Ap,(const npy_int64*)Aj,(const npy_int16*)Ax,s,m_star,*(const double*)tol,*(const cdouble*)mu,*(const cdouble*)a,(cdouble*)F,(cdouble*)work);
 			break;
 		case 27 :
 			expm_multiply<npy_int64,npy_int16,double,double>((const npy_int64)n,(const npy_int64*)Ap,(const npy_int64*)Aj,(const npy_int16*)Ax,s,m_star,*(const double*)tol,*(const double*)mu,*(const double*)a,(double*)F,(double*)work);
 			break;
 		case 28 :
-			expm_multiply<npy_int64,npy_int16,float,npy_cfloat_wrapper>((const npy_int64)n,(const npy_int64*)Ap,(const npy_int64*)Aj,(const npy_int16*)Ax,s,m_star,*(const float*)tol,*(const npy_cfloat_wrapper*)mu,*(const npy_cfloat_wrapper*)a,(npy_cfloat_wrapper*)F,(npy_cfloat_wrapper*)work);
+			expm_multiply<npy_int64,npy_int16,float,cfloat>((const npy_int64)n,(const npy_int64*)Ap,(const npy_int64*)Aj,(const npy_int16*)Ax,s,m_star,*(const float*)tol,*(const cfloat*)mu,*(const cfloat*)a,(cfloat*)F,(cfloat*)work);
 			break;
 		case 29 :
 			expm_multiply<npy_int64,npy_int16,float,float>((const npy_int64)n,(const npy_int64*)Ap,(const npy_int64*)Aj,(const npy_int16*)Ax,s,m_star,*(const float*)tol,*(const float*)mu,*(const float*)a,(float*)F,(float*)work);
 			break;
 		case 30 :
-			expm_multiply<npy_int64,npy_int8,double,npy_cdouble_wrapper>((const npy_int64)n,(const npy_int64*)Ap,(const npy_int64*)Aj,(const npy_int8*)Ax,s,m_star,*(const double*)tol,*(const npy_cdouble_wrapper*)mu,*(const npy_cdouble_wrapper*)a,(npy_cdouble_wrapper*)F,(npy_cdouble_wrapper*)work);
+			expm_multiply<npy_int64,npy_int8,double,cdouble>((const npy_int64)n,(const npy_int64*)Ap,(const npy_int64*)Aj,(const npy_int8*)Ax,s,m_star,*(const double*)tol,*(const cdouble*)mu,*(const cdouble*)a,(cdouble*)F,(cdouble*)work);
 			break;
 		case 31 :
 			expm_multiply<npy_int64,npy_int8,double,double>((const npy_int64)n,(const npy_int64*)Ap,(const npy_int64*)Aj,(const npy_int8*)Ax,s,m_star,*(const double*)tol,*(const double*)mu,*(const double*)a,(double*)F,(double*)work);
 			break;
 		case 32 :
-			expm_multiply<npy_int64,npy_int8,float,npy_cfloat_wrapper>((const npy_int64)n,(const npy_int64*)Ap,(const npy_int64*)Aj,(const npy_int8*)Ax,s,m_star,*(const float*)tol,*(const npy_cfloat_wrapper*)mu,*(const npy_cfloat_wrapper*)a,(npy_cfloat_wrapper*)F,(npy_cfloat_wrapper*)work);
+			expm_multiply<npy_int64,npy_int8,float,cfloat>((const npy_int64)n,(const npy_int64*)Ap,(const npy_int64*)Aj,(const npy_int8*)Ax,s,m_star,*(const float*)tol,*(const cfloat*)mu,*(const cfloat*)a,(cfloat*)F,(cfloat*)work);
 			break;
 		case 33 :
 			expm_multiply<npy_int64,npy_int8,float,float>((const npy_int64)n,(const npy_int64*)Ap,(const npy_int64*)Aj,(const npy_int8*)Ax,s,m_star,*(const float*)tol,*(const float*)mu,*(const float*)a,(float*)F,(float*)work);
@@ -206,103 +206,103 @@ void expm_multiply_batch_impl(const int switch_num,
 {
     switch(switch_num){
 		case 0 :
-			expm_multiply_batch<npy_int32,npy_cdouble_wrapper,double,npy_cdouble_wrapper>((const npy_int32)n,n_vecs,(const npy_int32*)Ap,(const npy_int32*)Aj,(const npy_cdouble_wrapper*)Ax,s,m_star,*(const double*)tol,*(const npy_cdouble_wrapper*)mu,*(const npy_cdouble_wrapper*)a,(npy_cdouble_wrapper*)F,(npy_cdouble_wrapper*)work);
+			expm_multiply_batch<npy_int32,cdouble,double,cdouble>((const npy_int32)n,n_vecs,(const npy_int32*)Ap,(const npy_int32*)Aj,(const cdouble*)Ax,s,m_star,*(const double*)tol,*(const cdouble*)mu,*(const cdouble*)a,(cdouble*)F,(cdouble*)work);
 			break;
 		case 1 :
-			expm_multiply_batch<npy_int32,double,double,npy_cdouble_wrapper>((const npy_int32)n,n_vecs,(const npy_int32*)Ap,(const npy_int32*)Aj,(const double*)Ax,s,m_star,*(const double*)tol,*(const npy_cdouble_wrapper*)mu,*(const npy_cdouble_wrapper*)a,(npy_cdouble_wrapper*)F,(npy_cdouble_wrapper*)work);
+			expm_multiply_batch<npy_int32,double,double,cdouble>((const npy_int32)n,n_vecs,(const npy_int32*)Ap,(const npy_int32*)Aj,(const double*)Ax,s,m_star,*(const double*)tol,*(const cdouble*)mu,*(const cdouble*)a,(cdouble*)F,(cdouble*)work);
 			break;
 		case 2 :
 			expm_multiply_batch<npy_int32,double,double,double>((const npy_int32)n,n_vecs,(const npy_int32*)Ap,(const npy_int32*)Aj,(const double*)Ax,s,m_star,*(const double*)tol,*(const double*)mu,*(const double*)a,(double*)F,(double*)work);
 			break;
 		case 3 :
-			expm_multiply_batch<npy_int32,npy_cfloat_wrapper,double,npy_cdouble_wrapper>((const npy_int32)n,n_vecs,(const npy_int32*)Ap,(const npy_int32*)Aj,(const npy_cfloat_wrapper*)Ax,s,m_star,*(const double*)tol,*(const npy_cdouble_wrapper*)mu,*(const npy_cdouble_wrapper*)a,(npy_cdouble_wrapper*)F,(npy_cdouble_wrapper*)work);
+			expm_multiply_batch<npy_int32,cfloat,double,cdouble>((const npy_int32)n,n_vecs,(const npy_int32*)Ap,(const npy_int32*)Aj,(const cfloat*)Ax,s,m_star,*(const double*)tol,*(const cdouble*)mu,*(const cdouble*)a,(cdouble*)F,(cdouble*)work);
 			break;
 		case 4 :
-			expm_multiply_batch<npy_int32,npy_cfloat_wrapper,float,npy_cfloat_wrapper>((const npy_int32)n,n_vecs,(const npy_int32*)Ap,(const npy_int32*)Aj,(const npy_cfloat_wrapper*)Ax,s,m_star,*(const float*)tol,*(const npy_cfloat_wrapper*)mu,*(const npy_cfloat_wrapper*)a,(npy_cfloat_wrapper*)F,(npy_cfloat_wrapper*)work);
+			expm_multiply_batch<npy_int32,cfloat,float,cfloat>((const npy_int32)n,n_vecs,(const npy_int32*)Ap,(const npy_int32*)Aj,(const cfloat*)Ax,s,m_star,*(const float*)tol,*(const cfloat*)mu,*(const cfloat*)a,(cfloat*)F,(cfloat*)work);
 			break;
 		case 5 :
-			expm_multiply_batch<npy_int32,float,double,npy_cdouble_wrapper>((const npy_int32)n,n_vecs,(const npy_int32*)Ap,(const npy_int32*)Aj,(const float*)Ax,s,m_star,*(const double*)tol,*(const npy_cdouble_wrapper*)mu,*(const npy_cdouble_wrapper*)a,(npy_cdouble_wrapper*)F,(npy_cdouble_wrapper*)work);
+			expm_multiply_batch<npy_int32,float,double,cdouble>((const npy_int32)n,n_vecs,(const npy_int32*)Ap,(const npy_int32*)Aj,(const float*)Ax,s,m_star,*(const double*)tol,*(const cdouble*)mu,*(const cdouble*)a,(cdouble*)F,(cdouble*)work);
 			break;
 		case 6 :
 			expm_multiply_batch<npy_int32,float,double,double>((const npy_int32)n,n_vecs,(const npy_int32*)Ap,(const npy_int32*)Aj,(const float*)Ax,s,m_star,*(const double*)tol,*(const double*)mu,*(const double*)a,(double*)F,(double*)work);
 			break;
 		case 7 :
-			expm_multiply_batch<npy_int32,float,float,npy_cfloat_wrapper>((const npy_int32)n,n_vecs,(const npy_int32*)Ap,(const npy_int32*)Aj,(const float*)Ax,s,m_star,*(const float*)tol,*(const npy_cfloat_wrapper*)mu,*(const npy_cfloat_wrapper*)a,(npy_cfloat_wrapper*)F,(npy_cfloat_wrapper*)work);
+			expm_multiply_batch<npy_int32,float,float,cfloat>((const npy_int32)n,n_vecs,(const npy_int32*)Ap,(const npy_int32*)Aj,(const float*)Ax,s,m_star,*(const float*)tol,*(const cfloat*)mu,*(const cfloat*)a,(cfloat*)F,(cfloat*)work);
 			break;
 		case 8 :
 			expm_multiply_batch<npy_int32,float,float,float>((const npy_int32)n,n_vecs,(const npy_int32*)Ap,(const npy_int32*)Aj,(const float*)Ax,s,m_star,*(const float*)tol,*(const float*)mu,*(const float*)a,(float*)F,(float*)work);
 			break;
 		case 9 :
-			expm_multiply_batch<npy_int32,npy_int16,double,npy_cdouble_wrapper>((const npy_int32)n,n_vecs,(const npy_int32*)Ap,(const npy_int32*)Aj,(const npy_int16*)Ax,s,m_star,*(const double*)tol,*(const npy_cdouble_wrapper*)mu,*(const npy_cdouble_wrapper*)a,(npy_cdouble_wrapper*)F,(npy_cdouble_wrapper*)work);
+			expm_multiply_batch<npy_int32,npy_int16,double,cdouble>((const npy_int32)n,n_vecs,(const npy_int32*)Ap,(const npy_int32*)Aj,(const npy_int16*)Ax,s,m_star,*(const double*)tol,*(const cdouble*)mu,*(const cdouble*)a,(cdouble*)F,(cdouble*)work);
 			break;
 		case 10 :
 			expm_multiply_batch<npy_int32,npy_int16,double,double>((const npy_int32)n,n_vecs,(const npy_int32*)Ap,(const npy_int32*)Aj,(const npy_int16*)Ax,s,m_star,*(const double*)tol,*(const double*)mu,*(const double*)a,(double*)F,(double*)work);
 			break;
 		case 11 :
-			expm_multiply_batch<npy_int32,npy_int16,float,npy_cfloat_wrapper>((const npy_int32)n,n_vecs,(const npy_int32*)Ap,(const npy_int32*)Aj,(const npy_int16*)Ax,s,m_star,*(const float*)tol,*(const npy_cfloat_wrapper*)mu,*(const npy_cfloat_wrapper*)a,(npy_cfloat_wrapper*)F,(npy_cfloat_wrapper*)work);
+			expm_multiply_batch<npy_int32,npy_int16,float,cfloat>((const npy_int32)n,n_vecs,(const npy_int32*)Ap,(const npy_int32*)Aj,(const npy_int16*)Ax,s,m_star,*(const float*)tol,*(const cfloat*)mu,*(const cfloat*)a,(cfloat*)F,(cfloat*)work);
 			break;
 		case 12 :
 			expm_multiply_batch<npy_int32,npy_int16,float,float>((const npy_int32)n,n_vecs,(const npy_int32*)Ap,(const npy_int32*)Aj,(const npy_int16*)Ax,s,m_star,*(const float*)tol,*(const float*)mu,*(const float*)a,(float*)F,(float*)work);
 			break;
 		case 13 :
-			expm_multiply_batch<npy_int32,npy_int8,double,npy_cdouble_wrapper>((const npy_int32)n,n_vecs,(const npy_int32*)Ap,(const npy_int32*)Aj,(const npy_int8*)Ax,s,m_star,*(const double*)tol,*(const npy_cdouble_wrapper*)mu,*(const npy_cdouble_wrapper*)a,(npy_cdouble_wrapper*)F,(npy_cdouble_wrapper*)work);
+			expm_multiply_batch<npy_int32,npy_int8,double,cdouble>((const npy_int32)n,n_vecs,(const npy_int32*)Ap,(const npy_int32*)Aj,(const npy_int8*)Ax,s,m_star,*(const double*)tol,*(const cdouble*)mu,*(const cdouble*)a,(cdouble*)F,(cdouble*)work);
 			break;
 		case 14 :
 			expm_multiply_batch<npy_int32,npy_int8,double,double>((const npy_int32)n,n_vecs,(const npy_int32*)Ap,(const npy_int32*)Aj,(const npy_int8*)Ax,s,m_star,*(const double*)tol,*(const double*)mu,*(const double*)a,(double*)F,(double*)work);
 			break;
 		case 15 :
-			expm_multiply_batch<npy_int32,npy_int8,float,npy_cfloat_wrapper>((const npy_int32)n,n_vecs,(const npy_int32*)Ap,(const npy_int32*)Aj,(const npy_int8*)Ax,s,m_star,*(const float*)tol,*(const npy_cfloat_wrapper*)mu,*(const npy_cfloat_wrapper*)a,(npy_cfloat_wrapper*)F,(npy_cfloat_wrapper*)work);
+			expm_multiply_batch<npy_int32,npy_int8,float,cfloat>((const npy_int32)n,n_vecs,(const npy_int32*)Ap,(const npy_int32*)Aj,(const npy_int8*)Ax,s,m_star,*(const float*)tol,*(const cfloat*)mu,*(const cfloat*)a,(cfloat*)F,(cfloat*)work);
 			break;
 		case 16 :
 			expm_multiply_batch<npy_int32,npy_int8,float,float>((const npy_int32)n,n_vecs,(const npy_int32*)Ap,(const npy_int32*)Aj,(const npy_int8*)Ax,s,m_star,*(const float*)tol,*(const float*)mu,*(const float*)a,(float*)F,(float*)work);
 			break;
 		case 17 :
-			expm_multiply_batch<npy_int64,npy_cdouble_wrapper,double,npy_cdouble_wrapper>((const npy_int64)n,n_vecs,(const npy_int64*)Ap,(const npy_int64*)Aj,(const npy_cdouble_wrapper*)Ax,s,m_star,*(const double*)tol,*(const npy_cdouble_wrapper*)mu,*(const npy_cdouble_wrapper*)a,(npy_cdouble_wrapper*)F,(npy_cdouble_wrapper*)work);
+			expm_multiply_batch<npy_int64,cdouble,double,cdouble>((const npy_int64)n,n_vecs,(const npy_int64*)Ap,(const npy_int64*)Aj,(const cdouble*)Ax,s,m_star,*(const double*)tol,*(const cdouble*)mu,*(const cdouble*)a,(cdouble*)F,(cdouble*)work);
 			break;
 		case 18 :
-			expm_multiply_batch<npy_int64,double,double,npy_cdouble_wrapper>((const npy_int64)n,n_vecs,(const npy_int64*)Ap,(const npy_int64*)Aj,(const double*)Ax,s,m_star,*(const double*)tol,*(const npy_cdouble_wrapper*)mu,*(const npy_cdouble_wrapper*)a,(npy_cdouble_wrapper*)F,(npy_cdouble_wrapper*)work);
+			expm_multiply_batch<npy_int64,double,double,cdouble>((const npy_int64)n,n_vecs,(const npy_int64*)Ap,(const npy_int64*)Aj,(const double*)Ax,s,m_star,*(const double*)tol,*(const cdouble*)mu,*(const cdouble*)a,(cdouble*)F,(cdouble*)work);
 			break;
 		case 19 :
 			expm_multiply_batch<npy_int64,double,double,double>((const npy_int64)n,n_vecs,(const npy_int64*)Ap,(const npy_int64*)Aj,(const double*)Ax,s,m_star,*(const double*)tol,*(const double*)mu,*(const double*)a,(double*)F,(double*)work);
 			break;
 		case 20 :
-			expm_multiply_batch<npy_int64,npy_cfloat_wrapper,double,npy_cdouble_wrapper>((const npy_int64)n,n_vecs,(const npy_int64*)Ap,(const npy_int64*)Aj,(const npy_cfloat_wrapper*)Ax,s,m_star,*(const double*)tol,*(const npy_cdouble_wrapper*)mu,*(const npy_cdouble_wrapper*)a,(npy_cdouble_wrapper*)F,(npy_cdouble_wrapper*)work);
+			expm_multiply_batch<npy_int64,cfloat,double,cdouble>((const npy_int64)n,n_vecs,(const npy_int64*)Ap,(const npy_int64*)Aj,(const cfloat*)Ax,s,m_star,*(const double*)tol,*(const cdouble*)mu,*(const cdouble*)a,(cdouble*)F,(cdouble*)work);
 			break;
 		case 21 :
-			expm_multiply_batch<npy_int64,npy_cfloat_wrapper,float,npy_cfloat_wrapper>((const npy_int64)n,n_vecs,(const npy_int64*)Ap,(const npy_int64*)Aj,(const npy_cfloat_wrapper*)Ax,s,m_star,*(const float*)tol,*(const npy_cfloat_wrapper*)mu,*(const npy_cfloat_wrapper*)a,(npy_cfloat_wrapper*)F,(npy_cfloat_wrapper*)work);
+			expm_multiply_batch<npy_int64,cfloat,float,cfloat>((const npy_int64)n,n_vecs,(const npy_int64*)Ap,(const npy_int64*)Aj,(const cfloat*)Ax,s,m_star,*(const float*)tol,*(const cfloat*)mu,*(const cfloat*)a,(cfloat*)F,(cfloat*)work);
 			break;
 		case 22 :
-			expm_multiply_batch<npy_int64,float,double,npy_cdouble_wrapper>((const npy_int64)n,n_vecs,(const npy_int64*)Ap,(const npy_int64*)Aj,(const float*)Ax,s,m_star,*(const double*)tol,*(const npy_cdouble_wrapper*)mu,*(const npy_cdouble_wrapper*)a,(npy_cdouble_wrapper*)F,(npy_cdouble_wrapper*)work);
+			expm_multiply_batch<npy_int64,float,double,cdouble>((const npy_int64)n,n_vecs,(const npy_int64*)Ap,(const npy_int64*)Aj,(const float*)Ax,s,m_star,*(const double*)tol,*(const cdouble*)mu,*(const cdouble*)a,(cdouble*)F,(cdouble*)work);
 			break;
 		case 23 :
 			expm_multiply_batch<npy_int64,float,double,double>((const npy_int64)n,n_vecs,(const npy_int64*)Ap,(const npy_int64*)Aj,(const float*)Ax,s,m_star,*(const double*)tol,*(const double*)mu,*(const double*)a,(double*)F,(double*)work);
 			break;
 		case 24 :
-			expm_multiply_batch<npy_int64,float,float,npy_cfloat_wrapper>((const npy_int64)n,n_vecs,(const npy_int64*)Ap,(const npy_int64*)Aj,(const float*)Ax,s,m_star,*(const float*)tol,*(const npy_cfloat_wrapper*)mu,*(const npy_cfloat_wrapper*)a,(npy_cfloat_wrapper*)F,(npy_cfloat_wrapper*)work);
+			expm_multiply_batch<npy_int64,float,float,cfloat>((const npy_int64)n,n_vecs,(const npy_int64*)Ap,(const npy_int64*)Aj,(const float*)Ax,s,m_star,*(const float*)tol,*(const cfloat*)mu,*(const cfloat*)a,(cfloat*)F,(cfloat*)work);
 			break;
 		case 25 :
 			expm_multiply_batch<npy_int64,float,float,float>((const npy_int64)n,n_vecs,(const npy_int64*)Ap,(const npy_int64*)Aj,(const float*)Ax,s,m_star,*(const float*)tol,*(const float*)mu,*(const float*)a,(float*)F,(float*)work);
 			break;
 		case 26 :
-			expm_multiply_batch<npy_int64,npy_int16,double,npy_cdouble_wrapper>((const npy_int64)n,n_vecs,(const npy_int64*)Ap,(const npy_int64*)Aj,(const npy_int16*)Ax,s,m_star,*(const double*)tol,*(const npy_cdouble_wrapper*)mu,*(const npy_cdouble_wrapper*)a,(npy_cdouble_wrapper*)F,(npy_cdouble_wrapper*)work);
+			expm_multiply_batch<npy_int64,npy_int16,double,cdouble>((const npy_int64)n,n_vecs,(const npy_int64*)Ap,(const npy_int64*)Aj,(const npy_int16*)Ax,s,m_star,*(const double*)tol,*(const cdouble*)mu,*(const cdouble*)a,(cdouble*)F,(cdouble*)work);
 			break;
 		case 27 :
 			expm_multiply_batch<npy_int64,npy_int16,double,double>((const npy_int64)n,n_vecs,(const npy_int64*)Ap,(const npy_int64*)Aj,(const npy_int16*)Ax,s,m_star,*(const double*)tol,*(const double*)mu,*(const double*)a,(double*)F,(double*)work);
 			break;
 		case 28 :
-			expm_multiply_batch<npy_int64,npy_int16,float,npy_cfloat_wrapper>((const npy_int64)n,n_vecs,(const npy_int64*)Ap,(const npy_int64*)Aj,(const npy_int16*)Ax,s,m_star,*(const float*)tol,*(const npy_cfloat_wrapper*)mu,*(const npy_cfloat_wrapper*)a,(npy_cfloat_wrapper*)F,(npy_cfloat_wrapper*)work);
+			expm_multiply_batch<npy_int64,npy_int16,float,cfloat>((const npy_int64)n,n_vecs,(const npy_int64*)Ap,(const npy_int64*)Aj,(const npy_int16*)Ax,s,m_star,*(const float*)tol,*(const cfloat*)mu,*(const cfloat*)a,(cfloat*)F,(cfloat*)work);
 			break;
 		case 29 :
 			expm_multiply_batch<npy_int64,npy_int16,float,float>((const npy_int64)n,n_vecs,(const npy_int64*)Ap,(const npy_int64*)Aj,(const npy_int16*)Ax,s,m_star,*(const float*)tol,*(const float*)mu,*(const float*)a,(float*)F,(float*)work);
 			break;
 		case 30 :
-			expm_multiply_batch<npy_int64,npy_int8,double,npy_cdouble_wrapper>((const npy_int64)n,n_vecs,(const npy_int64*)Ap,(const npy_int64*)Aj,(const npy_int8*)Ax,s,m_star,*(const double*)tol,*(const npy_cdouble_wrapper*)mu,*(const npy_cdouble_wrapper*)a,(npy_cdouble_wrapper*)F,(npy_cdouble_wrapper*)work);
+			expm_multiply_batch<npy_int64,npy_int8,double,cdouble>((const npy_int64)n,n_vecs,(const npy_int64*)Ap,(const npy_int64*)Aj,(const npy_int8*)Ax,s,m_star,*(const double*)tol,*(const cdouble*)mu,*(const cdouble*)a,(cdouble*)F,(cdouble*)work);
 			break;
 		case 31 :
 			expm_multiply_batch<npy_int64,npy_int8,double,double>((const npy_int64)n,n_vecs,(const npy_int64*)Ap,(const npy_int64*)Aj,(const npy_int8*)Ax,s,m_star,*(const double*)tol,*(const double*)mu,*(const double*)a,(double*)F,(double*)work);
 			break;
 		case 32 :
-			expm_multiply_batch<npy_int64,npy_int8,float,npy_cfloat_wrapper>((const npy_int64)n,n_vecs,(const npy_int64*)Ap,(const npy_int64*)Aj,(const npy_int8*)Ax,s,m_star,*(const float*)tol,*(const npy_cfloat_wrapper*)mu,*(const npy_cfloat_wrapper*)a,(npy_cfloat_wrapper*)F,(npy_cfloat_wrapper*)work);
+			expm_multiply_batch<npy_int64,npy_int8,float,cfloat>((const npy_int64)n,n_vecs,(const npy_int64*)Ap,(const npy_int64*)Aj,(const npy_int8*)Ax,s,m_star,*(const float*)tol,*(const cfloat*)mu,*(const cfloat*)a,(cfloat*)F,(cfloat*)work);
 			break;
 		case 33 :
 			expm_multiply_batch<npy_int64,npy_int8,float,float>((const npy_int64)n,n_vecs,(const npy_int64*)Ap,(const npy_int64*)Aj,(const npy_int8*)Ax,s,m_star,*(const float*)tol,*(const float*)mu,*(const float*)a,(float*)F,(float*)work);

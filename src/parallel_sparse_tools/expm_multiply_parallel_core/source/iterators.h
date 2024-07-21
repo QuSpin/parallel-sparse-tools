@@ -22,18 +22,18 @@ struct Abs
 
 
 template<>
-struct Abs<npy_cfloat_wrapper>
+struct Abs<cfloat>
 {
-	inline float operator()(const npy_cfloat_wrapper &val){
+	inline float operator()(const cfloat &val){
 		return math_functions::abs(val);
 	}
 };
 
 
 template<>
-struct Abs<npy_cdouble_wrapper>
+struct Abs<cdouble>
 {
-	inline double operator()(const npy_cdouble_wrapper &val){
+	inline double operator()(const cdouble &val){
 		return math_functions::abs(val);
 	}
 };

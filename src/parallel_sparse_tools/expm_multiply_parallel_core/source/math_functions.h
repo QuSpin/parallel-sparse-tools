@@ -20,12 +20,12 @@ inline double abs(const double &value){
 	return std::abs(value);
 }
 
-inline float abs(const npy_cfloat_wrapper &value){
-	return std::hypot(value.real,value.imag);
+inline float abs(const cfloat &value){
+	return std::hypot(value.real(),value.imag());
 }
 
-inline double abs(const npy_cdouble_wrapper &value){
-	return std::hypot(value.real,value.imag);
+inline double abs(const cdouble &value){
+	return std::hypot(value.real(),value.imag());
 }
 
 inline float compare_abs(const float R,const float B){
@@ -37,9 +37,9 @@ inline double compare_abs(const double R,const double B){
 }
 
 // checks of complex number 
-inline float compare_abs(const float R,const npy_cfloat_wrapper &B){
-	const float x = std::abs(B.real);
-	const float y = std::abs(B.imag);
+inline float compare_abs(const float R,const cfloat &B){
+	const float x = std::abs(B.real());
+	const float y = std::abs(B.imag());
 
 	if(x+y <= R){
 		return R;
@@ -57,12 +57,12 @@ inline float compare_abs(const float R,const npy_cfloat_wrapper &B){
 	}
 }
 
-inline double compare_abs(const double R,const npy_cdouble_wrapper &B){
+inline double compare_abs(const double R,const cdouble &B){
 	// std::hypot is expensive to calculate, check limiting cases before
 	// resorting to using it by checking to see if x,y point falls inside circle 
 	// of radius R that defines the current highest magnitude. 
-	const double x = std::abs(B.real);
-	const double y = std::abs(B.imag);
+	const double x = std::abs(B.real());
+	const double y = std::abs(B.imag());
 	
 	if(x+y <= R){ // => (x+y)^2 = x^2+y^2+2xy <= R^2 
 		return R;
@@ -85,14 +85,14 @@ inline double compare_abs(const double R,const npy_cdouble_wrapper &B){
 
 // exponentiation
 
-inline npy_cdouble_wrapper exp(const npy_cdouble_wrapper &value){
-	std::complex<double> res = std::exp(std::complex<double>(value.real,value.imag));
-	return npy_cdouble_wrapper(res.real(),res.imag());
+inline cdouble exp(const cdouble &value){
+	std::complex<double> res = std::exp(std::complex<double>(value.real(),value.imag()));
+	return cdouble(res.real(),res.imag());
 }
 
-inline npy_cfloat_wrapper exp(const npy_cfloat_wrapper &value){
-	std::complex<float> res = std::exp(std::complex<float>(value.real,value.imag));
-	return npy_cfloat_wrapper(res.real(),res.imag());
+inline cfloat exp(const cfloat &value){
+	std::complex<float> res = std::exp(std::complex<float>(value.real(),value.imag()));
+	return cfloat(res.real(),res.imag());
 }
 
 inline double exp(const double &value){
@@ -105,12 +105,12 @@ inline float exp(const float &value){
 
 
 
-inline void print(const npy_cdouble_wrapper value){
-	printf("(%f, %f)\n",value.real,value.imag);
+inline void print(const cdouble value){
+	printf("(%f, %f)\n",value.real(),value.imag());
 }
 
-inline void print(const npy_cfloat_wrapper value){
-	printf("(%f, %f)\n",value.real,value.imag);
+inline void print(const cfloat value){
+	printf("(%f, %f)\n",value.real(),value.imag());
 }
 
 inline void print(const double value){
