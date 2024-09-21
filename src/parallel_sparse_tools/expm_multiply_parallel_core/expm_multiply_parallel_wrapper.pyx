@@ -79,8 +79,8 @@ cdef inline bool not_well_defined_output(ndarray arr,npy_intp ndim):
 	return (not _np.PyArray_ISCARRAY(arr)) or (_np.PyArray_NDIM(arr)!=ndim)
 
 
-def _wrapper_expm_multiply(ndarray indptr,ndarray indices,ndarray data,int s,int m_star,ndarray a,
-							ndarray tol,ndarray mu,ndarray v,ndarray work):
+def _wrapper_expm_multiply(ndarray indptr,ndarray indices,ndarray data,int s,int m_star,
+							ndarray tol,ndarray mu,ndarray a,ndarray v,ndarray work):
 	cdef PyArray_Descr * indptr_dtype = _np.PyArray_DESCR(indptr)
 	cdef PyArray_Descr * indices_dtype = _np.PyArray_DESCR(indices)
 	cdef PyArray_Descr * data_dtype = _np.PyArray_DESCR(data)
@@ -125,8 +125,8 @@ def _wrapper_expm_multiply(ndarray indptr,ndarray indices,ndarray data,int s,int
 
 
 
-def _wrapper_expm_multiply_batch(ndarray indptr,ndarray indices,ndarray data,int s,int m_star,ndarray a,
-								ndarray tol,ndarray mu,ndarray v,ndarray work):
+def _wrapper_expm_multiply_batch(ndarray indptr,ndarray indices,ndarray data,int s,int m_star,
+								ndarray tol,ndarray mu,ndarray a,ndarray v,ndarray work):
 	cdef PyArray_Descr * indptr_dtype = _np.PyArray_DESCR(indptr)
 	cdef PyArray_Descr * indices_dtype = _np.PyArray_DESCR(indices)
 	cdef PyArray_Descr * data_dtype = _np.PyArray_DESCR(data)

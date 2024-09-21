@@ -19,14 +19,14 @@ void csc_matvec_noomp_contig(const bool overwrite_y,
             y[j] = 0;
         }
     }
-
+    const T3 aa = static_cast<T3>(a);
     for(I j = 0; j < n_col; j++){
         I col_start = Ap[j];
         I col_end   = Ap[j+1];
 
         for(I ii = col_start; ii < col_end; ii++){
             const I i = Ai[ii];
-            y[i] += (a * Ax[ii]) * x[j];
+            y[i] += aa * static_cast<T3>(Ax[ii]) * x[j];
         }
     }
 }

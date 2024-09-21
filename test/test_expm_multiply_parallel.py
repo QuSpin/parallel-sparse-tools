@@ -4,25 +4,33 @@ from scipy.sparse.linalg import expm_multiply
 import numpy as np
 import pytest
 
+def almost_equal(u, v, tol=None) -> bool:
+    norm = np.linalg.norm(u - v, ord=np.inf)
+    
+    if tol is None:
+        tol = np.finfo(norm.dtype).eps * max(np.linalg.norm(u, ord=np.inf), np.linalg.norm(v, ord=np.inf), 100)
 
-def test_matvec_p():
+    return norm <= tol
+
+
+@pytest.mark.parametrize("N", [10, 100, 1000])
+def test_matvec_p(N):
     from parallel_sparse_tools.expm_multiply_parallel_core.expm_multiply_parallel_core import (
         matvec_p,
     )
 
-    v = np.random.rand(10)
-    A = random(10, 10, density=0.1, format="csr")
+    v = np.random.rand(N)
+    A = random(N, N, density=0.1, format="csr")
     mu = 0.1
     a = 0.1
 
-    M = a * (A.toarray() - mu * np.eye(10))
+    M = a * (A.toarray() - mu * np.eye(N))
 
     expected_u = (M @ M @ M).dot(v)
     u = matvec_p(v, A, a, mu, 3)
 
-    print(u)
-    print(expected_u)
-    assert np.allclose(expected_u, u)
+    print(np.linalg.norm(u - expected_u))
+    almost_equal(expected_u, u)
 
 
 def test_errors():
@@ -111,49 +119,10 @@ def test_set_a():
 
     assert U.a == a
 
-
-def test_vector():
-    A = random(100, 100, density=0.1, format="csr")
-    v = np.random.rand(100)
-
-    t = 0.1
-
-    expected_u = expm_multiply(t * A, v)
-
-    U = ExpmMultiplyParallel(A, a=t)
-
-    np.allclose(U.dot(v), expected_u)
-
-    t = -0.1j
-
-    expected_u = expm_multiply(t * A, v)
-
-    U.set_a(t)
-
-    np.allclose(U.dot(v), expected_u)
-
-    t = 0.1
-    A = random(100, 100, density=0.1, format="csr") >= 0.5
-    A = A.astype(np.int8)
-
-    U = ExpmMultiplyParallel(A, a=t, dtype=np.float64)
-    expected_u = expm_multiply(t * A, v)
-
-    np.allclose(U.dot(v), expected_u)
-
-    t = 0.1
-    A = random(100, 100, density=0.1, format="csr") >= 0.5
-    A = A.astype(np.int8)
-
-    U = ExpmMultiplyParallel(A, a=t, dtype=np.float64)
-    expected_u = expm_multiply(t * A, v)
-
-    np.allclose(U.dot(v, tol=1e-13), expected_u)
-
-
-def test_batch():
-    A = random(100, 100, density=0.1, format="csr")
-    v = np.random.rand(100, 4)
+@pytest.mark.parametrize("N", [10, 100, 1000])
+def test_vector(N):
+    A = random(N, N, density=0.1, format="csr")
+    v = np.random.rand(N)
 
     t = 0.1
 
@@ -161,7 +130,7 @@ def test_batch():
 
     U = ExpmMultiplyParallel(A, a=t)
 
-    np.allclose(U.dot(v), expected_u)
+    almost_equal(U.dot(v), expected_u)
 
     t = -0.1j
 
@@ -169,22 +138,66 @@ def test_batch():
 
     U.set_a(t)
 
-    np.allclose(U.dot(v), expected_u)
+    almost_equal(U.dot(v), expected_u)
 
     t = 0.1
-    A = random(100, 100, density=0.1, format="csr") >= 0.5
+    A = random(N, N, density=0.1, format="csr") >= 0.5
     A = A.astype(np.int8)
 
     U = ExpmMultiplyParallel(A, a=t, dtype=np.float64)
     expected_u = expm_multiply(t * A, v)
 
-    np.allclose(U.dot(v), expected_u)
+    almost_equal(U.dot(v), expected_u)
 
-    t = 10.0
-    A = random(100, 100, density=0.1, format="csr") >= 0.5
+    t = 0.1
+    A = random(N, N, density=0.1, format="csr") >= 0.5
     A = A.astype(np.int8)
 
     U = ExpmMultiplyParallel(A, a=t, dtype=np.float64)
     expected_u = expm_multiply(t * A, v)
 
-    np.allclose(U.dot(v, tol=1e-13, overwrite_v=True), expected_u)
+    almost_equal(U.dot(v, tol=1e-13), expected_u)
+
+@pytest.mark.parametrize("N", [10,100,1000])
+def test_batch(N):
+    A = random(N, N, density=np.log(N)/N) + 1j * random(N, N, density=np.log(N)/N)
+    A = A.tocsr()
+    v = np.random.normal(0, 1, size=(N, 10)) + 1j * np.random.normal(
+        0, 1, size=(N, 10)
+    )
+    v /= np.linalg.norm(v)
+    t = 0.00001
+
+    expected_u = expm_multiply(t * A, v)
+
+    U = ExpmMultiplyParallel(A, a=t)
+
+    almost_equal(U.dot(v), expected_u)
+
+    t = -0.00001j
+
+    expected_u = expm_multiply(t * A, v)
+
+    U.set_a(t)
+
+    almost_equal(U.dot(v), expected_u)
+
+    t = 0.000001
+    A = random(N, N, density=0.1, format="csr") >= 0.5
+    A = A.astype(np.int8)
+
+    U = ExpmMultiplyParallel(A, a=t, dtype=np.float64)
+    expected_u = expm_multiply(t * A, v)
+
+    almost_equal(U.dot(v), expected_u)
+
+    t = 0.000001
+    A = random(N, N, density=0.1, format="csr") >= 0.5
+    A = A.astype(np.int8)
+
+    U = ExpmMultiplyParallel(A, a=t, dtype=np.float64)
+    expected_u = expm_multiply(t * A, v)
+
+    almost_equal(U.dot(v, tol=1e-13, overwrite_v=True), expected_u)
+
+

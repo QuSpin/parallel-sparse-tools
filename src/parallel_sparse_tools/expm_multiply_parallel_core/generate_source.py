@@ -1,3 +1,4 @@
+import itertools
 import numpy as np
 from numpy import int8, int16, int32, int64, float32, float64, complex64, complex128
 import os
@@ -35,7 +36,7 @@ real_dtypes = {
 
 I_types = [int32, int64]
 T_types = [complex128, float64, complex64, float32, int16, int8]
-T3_types = [complex128, float64, complex64, float32]
+F_types = [complex128, float64, complex64, float32]
 
 
 get_switch_body = """
@@ -53,35 +54,47 @@ int get_switch_expm_multiply(PyArray_Descr * dtype1,PyArray_Descr * dtype2,PyArr
 }}"""
 
 
+# Vectors are the same type for input and output
+# This is to reduce the number of combinations
+# We can always cast the input to the appropriate
+# type for the output with no loss of precision
+# and with little overhead.
+
+def get_eq(name, T):
+    if T in [int8, int16, int32, int64]:
+        return f"PyArray_EquivTypenums({name},{numpy_numtypes[T]})"
+    else:
+        return f"{name} == {numpy_numtypes[T]}"
+
 def generate_get_switch_num():
-    switch_num = 0
-    expm_multiply_body = "if(0){}\n"
+    switches = []
+    switch_num = 0    
+    body = "if(0){}\n"
     for I in I_types:
-        expm_multiply_body = (
-            expm_multiply_body
+        body = (
+            body
             + "\telse if(PyArray_EquivTypenums(I,{})){{\n\t\tif(0){{}}\n".format(
                 numpy_numtypes[I]
             )
         )
-        for T1 in T_types:
-            for T2 in T_types:
-                for T3 in T3_types:
-                    if np.can_cast(T1, T3) and T2 == real_dtypes[T3]:
-                        expm_multiply_body = (
-                            expm_multiply_body
-                            + "\t\telse if(PyArray_EquivTypenums(T1,{}) && PyArray_EquivTypenums(T2,{}) && PyArray_EquivTypenums(T3,{})){{return {};}}\n".format(
-                                numpy_numtypes[T1],
-                                numpy_numtypes[T2],
-                                numpy_numtypes[T3],
-                                switch_num,
-                            )
-                        )
-                        switch_num += 1
+        for T1, T3 in itertools.product(T_types, F_types):
+            if np.can_cast(T1, T3):
+                switches.append((switch_num, I, T1, real_dtypes[T3], T3))
+                checks = [get_eq("T1", T1), get_eq("T2", real_dtypes[T3]), get_eq("T3", T3)]
+                get_eqs = " && ".join(checks)
+                body = (
+                    body
+                    + "\t\telse if({}){{return {};}}\n".format(
+                        get_eqs,
+                        switch_num,
+                    )
+                )
+                switch_num += 1
 
-        expm_multiply_body = expm_multiply_body + "\t\telse {return -1;}\n\t}\n"
-    expm_multiply_body = expm_multiply_body + "\telse {return -1;}\n"
+        body = body + "\t\telse {return -1;}\n\t}\n"
+    body = body + "\telse {return -1;}\n"
 
-    return get_switch_body.format(expm_multiply_body=expm_multiply_body)
+    return switches, get_switch_body.format(expm_multiply_body=body)
 
 
 expm_multiply_parallel_temp = """
@@ -107,25 +120,30 @@ void expm_multiply_impl(const int switch_num,
 }}"""
 
 
-def generate_expm_multiply():
+def generate_expm_multiply(switches):
     switch_num = 0
     switch_body = ""
     case_tmp = "\n\t\tcase {} :\n\t\t\t{}\n\t\t\tbreak;"
-    call_tmp = "expm_multiply<{I},{T1},{T2},{T3}>((const {I})n,(const {I}*)Ap,(const {I}*)Aj,(const {T1}*)Ax,s,m_star,*(const {T2}*)tol,*(const {T3}*)mu,*(const {T3}*)a,({T3}*)F,({T3}*)work);"
-    for I in I_types:
-        for T1 in T_types:
-            for T2 in T_types:
-                for T3 in T3_types:
-                    if np.can_cast(T1, T3) and T2 == real_dtypes[T3]:
-                        call = call_tmp.format(
-                            I=numpy_ctypes[I],
-                            T1=numpy_ctypes[T1],
-                            T2=numpy_ctypes[T2],
-                            T3=numpy_ctypes[T3],
-                        )
-                        switch_body = switch_body + case_tmp.format(switch_num, call)
-
-                        switch_num += 1
+    call_tmp = ("expm_multiply<{I},{T1},{T2},{T3}>("
+                "static_cast<const {I}>(n),"
+                "reinterpret_cast<const {I}*>(Ap),"
+                "reinterpret_cast<const {I}*>(Aj),"
+                "reinterpret_cast<const {T1}*>(Ax),"
+                "s,"
+                "m_star,"
+                "*reinterpret_cast<const {T2}*>(tol),"
+                "*reinterpret_cast<const {T3}*>(mu),"
+                "*reinterpret_cast<const {T3}*>(a),"
+                "reinterpret_cast<{T3}*>(F),"
+                "reinterpret_cast<{T3}*>(work));")
+    for switch_num, I, T1, T2, T3 in switches:
+        call = call_tmp.format(
+            I=numpy_ctypes[I],
+            T1=numpy_ctypes[T1],
+            T2=numpy_ctypes[T2],
+            T3=numpy_ctypes[T3],
+        )
+        switch_body = switch_body + case_tmp.format(switch_num, call)
 
     return expm_multiply_parallel_temp.format(switch_body=switch_body)
 
@@ -154,25 +172,20 @@ void expm_multiply_batch_impl(const int switch_num,
 }}"""
 
 
-def generate_expm_multiply_batch():
+def generate_expm_multiply_batch(switches):
     switch_num = 0
     switch_body = ""
     case_tmp = "\n\t\tcase {} :\n\t\t\t{}\n\t\t\tbreak;"
-    call_tmp = "expm_multiply_batch<{I},{T1},{T2},{T3}>((const {I})n,n_vecs,(const {I}*)Ap,(const {I}*)Aj,(const {T1}*)Ax,s,m_star,*(const {T2}*)tol,*(const {T3}*)mu,*(const {T3}*)a,({T3}*)F,({T3}*)work);"
-    for I in I_types:
-        for T1 in T_types:
-            for T2 in T_types:
-                for T3 in T3_types:
-                    if np.can_cast(T1, T3) and T2 == real_dtypes[T3]:
-                        call = call_tmp.format(
-                            I=numpy_ctypes[I],
-                            T1=numpy_ctypes[T1],
-                            T2=numpy_ctypes[T2],
-                            T3=numpy_ctypes[T3],
-                        )
-                        switch_body = switch_body + case_tmp.format(switch_num, call)
+    call_tmp = "expm_multiply_batch<{I},{T1},{T2},{T3}>(static_cast<const {I}>(n),n_vecs,reinterpret_cast<const {I}*>(Ap),reinterpret_cast<const {I}*>(Aj),reinterpret_cast<const {T1}*>(Ax),s,m_star,*reinterpret_cast<const {T2}*>(tol),*reinterpret_cast<const {T3}*>(mu),*reinterpret_cast<const {T3}*>(a),reinterpret_cast<{T3}*>(F),reinterpret_cast<{T3}*>(work));"
+    for switch_num, I, T1, T2, T3 in switches:
+        call = call_tmp.format(
+            I=numpy_ctypes[I],
+            T1=numpy_ctypes[T1],
+            T2=numpy_ctypes[T2],
+            T3=numpy_ctypes[T3],
+        )
+        switch_body = switch_body + case_tmp.format(switch_num, call)
 
-                        switch_num += 1
 
     return expm_multiply_parallel_batch_temp.format(switch_body=switch_body)
 
@@ -193,9 +206,9 @@ inline bool EquivTypes(PyArray_Descr * dtype1,PyArray_Descr * dtype2){{
 
 
 def generate_source():
-    header_body = generate_get_switch_num()
-    header_body = header_body + generate_expm_multiply()
-    header_body = header_body + generate_expm_multiply_batch()
+    switches, header_body = generate_get_switch_num()
+    header_body = header_body + generate_expm_multiply(switches)
+    header_body = header_body + generate_expm_multiply_batch(switches)
     source_impl_header.format(header_body=header_body)
     path = os.path.join(
         os.path.dirname(__file__), "source", "expm_multiply_parallel_impl.h"
