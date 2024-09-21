@@ -97,10 +97,6 @@ class ExpmMultiplyParallel(object):
         )
         self._calculate_partition()
 
-        # shift = eye(A.shape[0],format="csr",dtype=A.dtype)
-        # shift.data *= mu
-        # self._A = self._A - shift
-
     @property
     def a(self):
         """scalar: value multiplying generator matrix :math:`A` in matrix exponential: :math:`\\mathrm{e}^{aA}`"""
@@ -237,6 +233,7 @@ class ExpmMultiplyParallel(object):
         else:
             tol = _np.array(self._tol, dtype=mu.real.dtype)
         if v.ndim == 1:
+            print(v.dtype, mu.dtype, a.dtype, tol.dtype, self._A.data.dtype)
             _wrapper_expm_multiply(
                 self._A.indptr,
                 self._A.indices,
