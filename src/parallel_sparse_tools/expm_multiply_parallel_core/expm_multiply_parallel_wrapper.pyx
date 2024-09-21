@@ -50,15 +50,15 @@ cdef extern from "csr_utils.h":
 
 
 @cython.boundscheck(False)
-def _wrapper_csr_trace(indtype[:] Ap, indtype[:] Aj, T1[:] Ax):
-	cdef indtype n_row = Ap.shape[0] - 1
-	return csr_trace(n_row,n_row,&Ap[0],&Aj[0],&Ax[0])
+def _wrapper_csr_trace(indtype[:] indptr, indtype[:] indices, T1[:] data):
+	cdef indtype n_row = indptr.shape[0] - 1
+	return csr_trace(n_row,n_row,&indptr[0],&indices[0],&data[0])
 
 @cython.boundscheck(False)
-def _wrapper_csr_1_norm(indtype[:] Ap, indtype[:] Aj, T1[:] Ax,mu):
-	cdef indtype n_row = Ap.shape[0] - 1
+def _wrapper_csr_1_norm(indtype[:] indptr, indtype[:] indices, T1[:] data,mu):
+	cdef indtype n_row = indptr.shape[0] - 1
 	cdef double complex mu_in = mu
-	return csr_1_norm(n_row,n_row,&Ap[0],&Aj[0],mu_in,&Ax[0])
+	return csr_1_norm(n_row,n_row,&indptr[0],&indices[0],mu_in,&data[0])
 
 
 cdef extern from "expm_multiply_parallel_impl.h":
@@ -79,37 +79,37 @@ cdef inline bool not_well_defined_output(ndarray arr,npy_intp ndim):
 	return (not _np.PyArray_ISCARRAY(arr)) or (_np.PyArray_NDIM(arr)!=ndim)
 
 
-def _wrapper_expm_multiply(ndarray Ap,ndarray Aj,ndarray Ax,int s,int m_star,ndarray a,
+def _wrapper_expm_multiply(ndarray indptr,ndarray indices,ndarray data,int s,int m_star,ndarray a,
 							ndarray tol,ndarray mu,ndarray v,ndarray work):
-	cdef PyArray_Descr * dtype1 = _np.PyArray_DESCR(Ap)
-	cdef PyArray_Descr * dtype2 = _np.PyArray_DESCR(Aj)
-	cdef PyArray_Descr * dtype3 = _np.PyArray_DESCR(Ax)
-	cdef PyArray_Descr * dtype4 = _np.PyArray_DESCR(a)
-	cdef PyArray_Descr * dtype5 = _np.PyArray_DESCR(tol)
-	cdef PyArray_Descr * dtype6 = _np.PyArray_DESCR(mu)
-	cdef PyArray_Descr * dtype7 = _np.PyArray_DESCR(v)
-	cdef PyArray_Descr * dtype8 = _np.PyArray_DESCR(work)
-	cdef void * Ap_ptr = _np.PyArray_DATA(Ap)
-	cdef void * Aj_ptr = _np.PyArray_DATA(Aj)
-	cdef void * Ax_ptr = _np.PyArray_DATA(Ax)
+	cdef PyArray_Descr * indptr_dtype = _np.PyArray_DESCR(indptr)
+	cdef PyArray_Descr * indices_dtype = _np.PyArray_DESCR(indices)
+	cdef PyArray_Descr * data_dtype = _np.PyArray_DESCR(data)
+	cdef PyArray_Descr * a_dtype = _np.PyArray_DESCR(a)
+	cdef PyArray_Descr * tol_dtype = _np.PyArray_DESCR(tol)
+	cdef PyArray_Descr * mu_dtype = _np.PyArray_DESCR(mu)
+	cdef PyArray_Descr * v_dtype = _np.PyArray_DESCR(v)
+	cdef PyArray_Descr * work_dtype = _np.PyArray_DESCR(work)
+	cdef void * Ap_ptr = _np.PyArray_DATA(indptr)
+	cdef void * Aj_ptr = _np.PyArray_DATA(indices)
+	cdef void * Ax_ptr = _np.PyArray_DATA(data)
 	cdef void * a_ptr = _np.PyArray_DATA(a)
 	cdef void * tol_ptr = _np.PyArray_DATA(tol)
 	cdef void * mu_ptr = _np.PyArray_DATA(mu)
 	cdef void * v_ptr = _np.PyArray_DATA(v)
 	cdef void * work_ptr = _np.PyArray_DATA(work)
-	cdef npy_intp n_row = _np.PyArray_DIM(Ap,0) - 1
-	cdef int switch_num = get_switch_expm_multiply(dtype1,dtype3,dtype5,dtype7) # I, T1, T2, T3
+	cdef npy_intp n_row = _np.PyArray_DIM(indptr,0) - 1
+	cdef int switch_num = get_switch_expm_multiply(indptr_dtype,data_dtype,tol_dtype,v_dtype) # I, T1, T2, T3
 	cdef bool arg_fail = False
 
 	arg_fail = arg_fail or (switch_num < 0)
-	arg_fail = arg_fail or (not EquivTypes(dtype1,dtype2))
-	arg_fail = arg_fail or (not EquivTypes(dtype4,dtype6))
-	arg_fail = arg_fail or (not EquivTypes(dtype4,dtype7))
-	arg_fail = arg_fail or (not EquivTypes(dtype7,dtype8))
+	arg_fail = arg_fail or (not EquivTypes(indptr_dtype,indices_dtype))
+	arg_fail = arg_fail or (not EquivTypes(a_dtype,mu_dtype))
+	arg_fail = arg_fail or (not EquivTypes(a_dtype,v_dtype))
+	arg_fail = arg_fail or (not EquivTypes(v_dtype,work_dtype))
 
-	arg_fail = arg_fail or not_well_defined_input(Ap,1)
-	arg_fail = arg_fail or not_well_defined_input(Aj,1)
-	arg_fail = arg_fail or not_well_defined_input(Ax,1)
+	arg_fail = arg_fail or not_well_defined_input(indptr,1)
+	arg_fail = arg_fail or not_well_defined_input(indices,1)
+	arg_fail = arg_fail or not_well_defined_input(data,1)
 	arg_fail = arg_fail or not_well_defined_input(a,0)
 	arg_fail = arg_fail or not_well_defined_input(mu,0)
 	arg_fail = arg_fail or not_well_defined_output(v,1)
@@ -125,38 +125,38 @@ def _wrapper_expm_multiply(ndarray Ap,ndarray Aj,ndarray Ax,int s,int m_star,nda
 
 
 
-def _wrapper_expm_multiply_batch(ndarray Ap,ndarray Aj,ndarray Ax,int s,int m_star,ndarray a,
+def _wrapper_expm_multiply_batch(ndarray indptr,ndarray indices,ndarray data,int s,int m_star,ndarray a,
 								ndarray tol,ndarray mu,ndarray v,ndarray work):
-	cdef PyArray_Descr * dtype1 = _np.PyArray_DESCR(Ap)
-	cdef PyArray_Descr * dtype2 = _np.PyArray_DESCR(Aj)
-	cdef PyArray_Descr * dtype3 = _np.PyArray_DESCR(Ax)
-	cdef PyArray_Descr * dtype4 = _np.PyArray_DESCR(a)
-	cdef PyArray_Descr * dtype5 = _np.PyArray_DESCR(tol)
-	cdef PyArray_Descr * dtype6 = _np.PyArray_DESCR(mu)
-	cdef PyArray_Descr * dtype7 = _np.PyArray_DESCR(v)
-	cdef PyArray_Descr * dtype8 = _np.PyArray_DESCR(work)
-	cdef void * Ap_ptr = _np.PyArray_DATA(Ap)
-	cdef void * Aj_ptr = _np.PyArray_DATA(Aj)
-	cdef void * Ax_ptr = _np.PyArray_DATA(Ax)
+	cdef PyArray_Descr * indptr_dtype = _np.PyArray_DESCR(indptr)
+	cdef PyArray_Descr * indices_dtype = _np.PyArray_DESCR(indices)
+	cdef PyArray_Descr * data_dtype = _np.PyArray_DESCR(data)
+	cdef PyArray_Descr * a_dtype = _np.PyArray_DESCR(a)
+	cdef PyArray_Descr * tol_dtype = _np.PyArray_DESCR(tol)
+	cdef PyArray_Descr * mu_dtype = _np.PyArray_DESCR(mu)
+	cdef PyArray_Descr * v_dtype = _np.PyArray_DESCR(v)
+	cdef PyArray_Descr * work_dtype = _np.PyArray_DESCR(work)
+	cdef void * Ap_ptr = _np.PyArray_DATA(indptr)
+	cdef void * Aj_ptr = _np.PyArray_DATA(indices)
+	cdef void * Ax_ptr = _np.PyArray_DATA(data)
 	cdef void * a_ptr = _np.PyArray_DATA(a)
 	cdef void * tol_ptr = _np.PyArray_DATA(tol)
 	cdef void * mu_ptr = _np.PyArray_DATA(mu)
 	cdef void * v_ptr = _np.PyArray_DATA(v)
 	cdef void * work_ptr = _np.PyArray_DATA(work)
-	cdef npy_intp n_row = _np.PyArray_DIM(Ap,0) - 1
+	cdef npy_intp n_row = _np.PyArray_DIM(indptr,0) - 1
 	cdef npy_intp n_vecs = _np.PyArray_DIM(v,1)
-	cdef int switch_num = get_switch_expm_multiply(dtype1,dtype3,dtype5,dtype7) # I, T1, T2, T3
+	cdef int switch_num = get_switch_expm_multiply(indptr_dtype,data_dtype,tol_dtype,v_dtype) # I, T1, T2, T3
 	cdef bool arg_fail = False
 
 	arg_fail = arg_fail or (switch_num < 0)
-	arg_fail = arg_fail or (not EquivTypes(dtype1,dtype2))
-	arg_fail = arg_fail or (not EquivTypes(dtype4,dtype6))
-	arg_fail = arg_fail or (not EquivTypes(dtype4,dtype7))
-	arg_fail = arg_fail or (not EquivTypes(dtype7,dtype8))
+	arg_fail = arg_fail or (not EquivTypes(indptr_dtype,indices_dtype))
+	arg_fail = arg_fail or (not EquivTypes(a_dtype,mu_dtype))
+	arg_fail = arg_fail or (not EquivTypes(a_dtype,v_dtype))
+	arg_fail = arg_fail or (not EquivTypes(v_dtype,work_dtype))
 
-	arg_fail = arg_fail or not_well_defined_input(Ap,1)
-	arg_fail = arg_fail or not_well_defined_input(Aj,1)
-	arg_fail = arg_fail or not_well_defined_input(Ax,1)
+	arg_fail = arg_fail or not_well_defined_input(indptr,1)
+	arg_fail = arg_fail or not_well_defined_input(indices,1)
+	arg_fail = arg_fail or not_well_defined_input(data,1)
 	arg_fail = arg_fail or not_well_defined_input(a,0)
 	arg_fail = arg_fail or not_well_defined_input(mu,0)
 	arg_fail = arg_fail or not_well_defined_output(v,2)
