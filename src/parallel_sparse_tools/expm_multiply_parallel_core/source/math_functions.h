@@ -2,6 +2,7 @@
 #define __MATH_FUNCTIONS_H__ 
 
 
+#include <complex>
 #include <cmath>
 #include <algorithm>
 #include <complex>
@@ -11,6 +12,11 @@ namespace math_functions
 {
 
 // abs
+
+template <typename T>
+inline T abs(const std::complex<T> &value){
+	return std::hypot(value.real(),value.imag());
+}
 
 inline float abs(const float &value){
 	return std::abs(value);
@@ -80,10 +86,38 @@ inline double compare_abs(const double R,const cdouble &B){
 	}
 }
 
+template <typename T>
+inline T compare_abs(const T R,const std::complex<T> &B){
+	const T x = std::abs(B.real());
+	const T y = std::abs(B.imag());
+
+	if(x+y <= R){
+		return R;
+	}
+	if(x > R || y > R){
+		return std::hypot(x,y);
+	}
+
+	T RR = std::hypot(x,y);
+	if(RR < R){
+		return R;
+	}
+	else{
+		return RR;
+	}
+}
+
 
 
 
 // exponentiation
+
+template <typename T>
+inline std::complex<T> exp(const std::complex<T> &value){
+	auto res = std::exp(value);
+	return std::complex<T> (res.real(),res.imag());
+}
+
 
 inline cdouble exp(const cdouble &value){
 	std::complex<double> res = std::exp(std::complex<double>(value.real(),value.imag()));

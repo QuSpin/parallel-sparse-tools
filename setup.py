@@ -10,17 +10,17 @@ import numpy as np
 
 def extra_compile_args() -> List[str]:
     if sys.platform in ["win32", "cygwin", "win64"]:
-        extra_compile_args = ["/openmp"]
+        extra_compile_args = ["/openmp", "/std:c++17"]
     if sys.platform in ["darwin"]:
         extra_compile_args = [
             "-DLLVM_ENABLE_PROJECTS",
             "-Xpreprocessor",
             "-fopenmp-version=50"
             "-fopenmp",
-            "--std=c++11",
+            "--std=c++17",
         ]
     else:
-        extra_compile_args = ["-fopenmp", "--std=c++11"]
+        extra_compile_args = ["-fopenmp", "--std=c++17"]
 
     if os.environ.get("COVERAGE", False):
         if sys.platform in ["win32", "cygwin", "win64", "darwin"]:

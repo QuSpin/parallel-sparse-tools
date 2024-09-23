@@ -32,7 +32,7 @@ void csr_matvec(const bool overwrite_y,
 		for(I k = 0; k<n; k++){
 			T3 sum = 0;
 			for(I jj = Ap[k]; jj < Ap[k+1]; jj++){
-				sum += Ax[jj] * x[Aj[jj]];
+				sum += static_cast<T3>(Ax[jj]) * x[Aj[jj]];
 			}
 			y[k] = a * sum;
 		}
@@ -40,7 +40,7 @@ void csr_matvec(const bool overwrite_y,
 		for(I k = 0; k<n; k++){
 			T3 sum = 0;
 			for(I jj = Ap[k]; jj < Ap[k+1]; jj++){
-				sum += Ax[jj] * x[Aj[jj]];
+				sum += static_cast<T3>(Ax[jj]) * x[Aj[jj]];
 			}
 			y[k] += a * sum;
 		}
@@ -68,7 +68,7 @@ void csr_matvec_multi(const bool overwrite_y,
 
 			for(I jj = Ap[k]; jj < Ap[k+1]; jj++){
 				const T3 * x_row = &x[n_vecs * Aj[jj]];
-				const T2 val = Ax[jj];
+				const T3 val = Ax[jj];
 
 				for(npy_intp vec_n=0;vec_n<n_vecs;vec_n++){
 					vco[vec_n] += val * x_row[vec_n];
@@ -88,7 +88,7 @@ void csr_matvec_multi(const bool overwrite_y,
 
 			for(I jj = Ap[k]; jj < Ap[k+1]; jj++){
 				const T3 * x_row = &x[n_vecs * Aj[jj]];
-				const T2 val = Ax[jj];
+				const T3 val = Ax[jj];
 
 				for(npy_intp vec_n=0;vec_n<n_vecs;vec_n++){
 					vco[vec_n] += val * x_row[vec_n];
@@ -170,18 +170,18 @@ void expm_multiply(const I n,
 			}
 
 			for(int j=1;j<m_star+1 && !exit_loop;j++){
+				const T3 a_over_j_s = a/T2(j*s);
 
 				#if defined(_OPENMP)
-				csrmv_merge<I,T1,T3,T3>(true,n,Ap,Aj,Ax,a/T2(j*s),B1,rco,vco,B2); // implied barrier
+				csrmv_merge<I,T1,T3,T3>(true,n,Ap,Aj,Ax,1.0,B1,rco,vco,B2); // implied barrier
 				#else
-				csr_matvec<I,T1,T3,T3>(true,n,Ap,Aj,Ax,a/T2(j*s),B1,rco,vco,B2);
+				csr_matvec<I,T1,T3,T3>(true,n,Ap,Aj,Ax,1.0,B1,rco,vco,B2);
 				#endif
 
 				c2_thread = 0; c3_thread = 0;
-				const T3 b = a * mu / T2(j*s);
-
+				
 				for(I k=begin;k<end;k++){
-					T3 b2 = B2[k] - b * B1[k];
+					T3 b2 = a_over_j_s * (B2[k] - mu * B1[k]);
 					T3 f  = F[k] += b2;
 					B1[k] = b2;
 					// used cached values to compute comparisons for infinite norm

@@ -1,3 +1,4 @@
+from functools import cached_property
 from scipy.sparse.linalg import LinearOperator, onenormest, aslinearoperator
 from .expm_multiply_parallel_wrapper import (
     _wrapper_expm_multiply,
@@ -93,13 +94,9 @@ class ExpmMultiplyParallel(object):
         )
         self._mu = _np.array(mu, dtype=self._dtype)
         self._A_1_norm = _wrapper_csr_1_norm(
-            self._A.indptr, self._A.indices, self._A.data, self._mu
+            self._A.indptr, self._A.indices, self._A.data, -self._mu
         )
         self._calculate_partition()
-
-        # shift = eye(A.shape[0],format="csr",dtype=A.dtype)
-        # shift.data *= mu
-        # self._A = self._A - shift
 
     @property
     def a(self):
@@ -237,15 +234,16 @@ class ExpmMultiplyParallel(object):
         else:
             tol = _np.array(self._tol, dtype=mu.real.dtype)
         if v.ndim == 1:
+            print(a.dtype, tol.dtype, mu.dtype, v.dtype, work_array.dtype)
             _wrapper_expm_multiply(
                 self._A.indptr,
                 self._A.indices,
                 self._A.data,
                 self._s,
                 self._m_star,
-                a,
                 tol,
                 mu,
+                a,
                 v,
                 work_array.ravel(),
             )
@@ -257,9 +255,9 @@ class ExpmMultiplyParallel(object):
                 self._A.data,
                 self._s,
                 self._m_star,
-                a,
                 tol,
                 mu,
+                a,
                 v,
                 work_array,
             )
@@ -327,22 +325,24 @@ class LazyOperatorNormInfo:
         """
         return _np.abs(self._a) * self._A_1_norm
 
+    @cached_property
+    def linear_operator(self):
+        def matvec(v):
+            return self._a * (self._A.dot(v) - self._mu * v)
+        
+        def rmatvec(v):
+            return _np.conj(self._a) * (self._A.transpose().conj().dot(v) - _np.conj(self._mu) * v)
+        
+        return LinearOperator(
+            self._A.shape, dtype=self._dtype, matvec=matvec, rmatvec=rmatvec
+        )
+
     def d(self, p):
         """
         Lazily estimate d_p(A) ~= || A^p ||^(1/p) where ||.|| is the 1-norm.
         """
         if p not in self._d:
-            matvec = lambda v: self._a * (self._A.dot(v) - self._mu * v)
-            rmatvec = lambda v: _np.conj(self._a) * (
-                self._A.transpose().conj().dot(v) - _np.conj(self._mu) * v
-            )
-            LO = LinearOperator(
-                self._A.shape, dtype=self._dtype, matvec=matvec, rmatvec=rmatvec
-            )
-
-            est = onenormest(LO**p)
-
-            # est = onenormest((self._a * aslinearoperator(self._A))**p)
+            est = onenormest(self.linear_operator**p)
             self._d[p] = est ** (1.0 / p)
 
         return self._d[p]
