@@ -68,7 +68,7 @@ def matvec(array, other, overwrite_out=False, out=None, a=1.0):
                     :lines: 11-
 
     Parameters
-    -----------
+    ----------
     array : array_like object (e.g. numpy.ndarray, scipy.sparse.csr_matrix,  scipy.sparse.csc_matrix,  scipy.sparse.dia_matrix)
             Sparse or dense array to take the dot product with.
     other : array_like
@@ -82,7 +82,7 @@ def matvec(array, other, overwrite_out=False, out=None, a=1.0):
             the result is added to the values in `out` (in-pace addition, cf. :math:`x += a A v`).
 
     Returns
-    --------
+    -------
     numpy.ndarray
             result of the matrix-vector product :math:`a A v`.
 

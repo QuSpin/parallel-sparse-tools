@@ -49,7 +49,7 @@ class ExpmMultiplyParallel(object):
         """Initializes `expm_multiply_parallel`.
 
         Parameters
-        -----------
+        ----------
         A : {array_like, scipy.sparse matrix}
             The operator (matrix) whose exponential is to be calculated.
         a : scalar, optional
@@ -166,7 +166,7 @@ class ExpmMultiplyParallel(object):
             :lines: 37-
 
         Parameters
-        -----------
+        ----------
         v : contiguous numpy.ndarray, 1d or 2d array
             array to apply :math:`\\mathrm{e}^{aA}` on.
         work_array : contiguous numpy.ndarray, optional
@@ -178,7 +178,7 @@ class ExpmMultiplyParallel(object):
             tolerance value used to truncate Taylor expansion of matrix exponential.
 
         Returns
-        --------
+        -------
         numpy.ndarray
             result of :math:`\\mathrm{e}^{aA}v`.
 
@@ -302,7 +302,7 @@ class LazyOperatorNormInfo:
         Provide the operator and some norm-related information.
 
         Parameters
-        -----------
+        ----------
         A : linear operator
             The operator of interest.
         A_1_norm : float
