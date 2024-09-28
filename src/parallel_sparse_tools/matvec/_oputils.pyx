@@ -236,7 +236,7 @@ cdef void _dia_matvecs(bool overwrite_y, ndarray offsets ,ndarray diags, ndarray
 def _prep_objects(mat_obj, other, overwrite_out, out, a):
   a_dtype = _np.result_type(_np.float32, _np.min_scalar_type(a))
   result_dtype = _np.result_type(mat_obj.dtype, a_dtype, other.dtype)
-  a = a.astype(result_dtype)
+  a = _np.array(a, dtype=result_dtype)
   if out is None:
     overwrite_out = True
     out = _np.zeros(mat_obj.shape[:1]+other.shape[1:], dtype=result_dtype, order="C")
