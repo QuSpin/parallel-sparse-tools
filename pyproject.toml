@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "parallel-sparse-tools"
-version = "0.2.2"
+version = "0.2.3"
 authors = [
     {name = "Phillip Weinberg", email = "weinbe58@gmail.com"},
 ]

@@ -234,7 +234,6 @@ class ExpmMultiplyParallel(object):
         else:
             tol = _np.array(self._tol, dtype=mu.real.dtype)
         if v.ndim == 1:
-            print(a.dtype, tol.dtype, mu.dtype, v.dtype, work_array.dtype)
             _wrapper_expm_multiply(
                 self._A.indptr,
                 self._A.indices,
