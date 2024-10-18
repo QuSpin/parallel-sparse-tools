@@ -15,7 +15,7 @@ def extra_compile_args() -> List[str]:
         extra_compile_args = [
             "-DLLVM_ENABLE_PROJECTS",
             "-Xpreprocessor",
-            "-fopenmp-version=50"
+            "-fopenmp-version=50",
             "-fopenmp",
             "--std=c++17",
         ]
@@ -44,7 +44,7 @@ def extra_link_args() -> List[str]:
         extra_link_args = [
             "-DLLVM_ENABLE_PROJECTS",
             "-Xpreprocessor",
-            "-fopenmp-version=50"
+            "-fopenmp-version=50",
             "-fopenmp",
         ]
     else:
