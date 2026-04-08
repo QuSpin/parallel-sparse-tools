@@ -29,6 +29,9 @@ jobs:
         uses: docker/setup-qemu-action@v3
         with:
           platforms: all
+      - name: Install libomp on macOS
+        if: runner.os == 'macOS'
+        run: brew install libomp
       - name: Build wheels
         uses: pypa/cibuildwheel@v3.1.2
         env:
